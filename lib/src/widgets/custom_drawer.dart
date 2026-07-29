@@ -136,6 +136,8 @@ class CustomDrawer extends StatelessWidget {
 
                       if (!context.mounted) return;
 
+                      context.read<ProfileViewModel>().clear();
+
                       context.go(AppRoutes.login);
                     },
                   ),

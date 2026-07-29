@@ -44,4 +44,9 @@ class ProfileViewModel extends ChangeNotifier {
 
     await loadProfile();
   }
+
+  void clear() {
+    profile = {};
+    notifyListeners();
+  }
 }
