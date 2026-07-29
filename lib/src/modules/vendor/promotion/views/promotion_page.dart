@@ -112,7 +112,7 @@ class _PromotionPageState extends State<PromotionPage> {
       padding: const EdgeInsets.all(16),
       itemCount: promotions.length,
       itemBuilder: (context, index) {
-        return buildPromotionCard(promotions[index]);
+        return buildPromotionCard(promotions[index], tabType: status);
       },
     );
   }
@@ -132,7 +132,7 @@ class _PromotionPageState extends State<PromotionPage> {
       padding: const EdgeInsets.all(16),
       itemCount: promotions.length,
       itemBuilder: (_, index) {
-        return buildPromotionCard(promotions[index]);
+        return buildPromotionCard(promotions[index], tabType: "approved");
       },
     );
   }
@@ -153,12 +153,61 @@ class _PromotionPageState extends State<PromotionPage> {
       padding: const EdgeInsets.all(16),
       itemCount: promotions.length,
       itemBuilder: (context, index) {
-        return buildPromotionCard(promotions[index]);
+        return buildPromotionCard(promotions[index], tabType: "completed");
       },
     );
   }
 
-  Widget buildPromotionCard(PromotionModel promotion) {
+  Future<void> _acceptRejection(PromotionModel promotion) async {
+    await showDialog(
+      context: context,
+      builder: (_) => ConfirmationDialog(
+        title: "Accept Rejection",
+        message:
+            "This promotion will remain rejected and stay in this list. Continue?",
+        confirmButtonText: "Accept",
+        cancelButtonText: "Cancel",
+        onConfirm: () {
+          Navigator.pop(context);
+
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text("Rejection accepted.")));
+        },
+      ),
+    );
+  }
+
+  Future<void> _reapplyPromotion(
+    PromotionViewModel vm,
+    PromotionModel promotion,
+  ) async {
+    await showDialog(
+      context: context,
+      builder: (_) => ConfirmationDialog(
+        title: "Re-apply Promotion",
+        message:
+            "This will send the promotion back for admin review as a new pending request. Continue?",
+        confirmButtonText: "Re-apply",
+        onConfirm: () async {
+          Navigator.pop(context);
+
+          await vm.reapplyPromotion(promotion.id);
+
+          if (!mounted) return;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Promotion re-applied for review.")),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildPromotionCard(
+    PromotionModel promotion, {
+    required String tabType,
+  }) {
     final vm = context.read<PromotionViewModel>();
 
     return Card(
@@ -241,69 +290,113 @@ class _PromotionPageState extends State<PromotionPage> {
               ],
             ),
 
-            const SizedBox(height: 15),
+            if (tabType == "pending") ...[
+              const SizedBox(height: 15),
 
-            /// Active
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.blue,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.edit),
+                      label: const Text("Edit"),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                CreatePromotionPage(promotion: promotion),
+                          ),
+                        ).then((_) {
+                          vm.loadPromotions();
+                        });
+                      },
                     ),
-                    icon: const Icon(Icons.edit),
-                    label: const Text("Edit"),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) =>
-                              CreatePromotionPage(promotion: promotion),
-                        ),
-                      ).then((_) {
-                        vm.loadPromotions();
-                      });
-                    },
                   ),
-                ),
 
-                const SizedBox(width: 12),
+                  const SizedBox(width: 12),
 
-                Expanded(
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                      ),
+                      icon: const Icon(Icons.delete),
+                      label: const Text("Delete"),
+                      onPressed: () async {
+                        await showDialog(
+                          context: context,
+
+                          builder: (_) => ConfirmationDialog(
+                            title: "Delete Promotion",
+
+                            message:
+                                "Are you sure you want to delete this promotion?",
+
+                            confirmButtonText: "Delete",
+
+                            cancelButtonText: "Cancel",
+
+                            onConfirm: () async {
+                              Navigator.pop(context);
+
+                              await vm.deletePromotion(promotion.id);
+                            },
+                          ),
+                        );
+                      },
                     ),
-                    icon: const Icon(Icons.delete),
-                    label: const Text("Delete"),
-                    onPressed: () async {
-                      await showDialog(
-                        context: context,
-
-                        builder: (_) => ConfirmationDialog(
-                          title: "Delete Promotion",
-
-                          message:
-                              "Are you sure you want to delete this promotion?",
-
-                          confirmButtonText: "Delete",
-
-                          cancelButtonText: "Cancel",
-
-                          onConfirm: () async {
-                            Navigator.pop(context);
-
-                            await vm.deletePromotion(promotion.id);
-                          },
-                        ),
-                      );
-                    },
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
+            ],
+
+            if (tabType == "completed") ...[
+              const SizedBox(height: 15),
+
+              Row(
+                children: [
+                  const Icon(Icons.confirmation_number, size: 18),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Used ${vm.usageCounts[promotion.id] ?? 0} time(s)",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ),
+            ],
+
+            if (tabType == "rejected") ...[
+              const SizedBox(height: 15),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => _acceptRejection(promotion),
+                      child: const Text("Accept Rejection"),
+                    ),
+                  ),
+
+                  const SizedBox(width: 12),
+
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () => _reapplyPromotion(vm, promotion),
+                      child: const Text("Re-apply"),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

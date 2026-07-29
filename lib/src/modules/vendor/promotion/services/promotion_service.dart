@@ -49,6 +49,35 @@ class PromotionService {
     });
   }
 
+  /// Sends a rejected promotion back into the admin's review queue.
+  Future<void> reapplyPromotion(String id) async {
+    await _firestore.collection("promotions").doc(id).update({
+      "status": "pending",
+    });
+  }
+
+  /// Counts how many bookings used each of this vendor's promotions.
+  Future<Map<String, int>> getUsageCounts() async {
+    final uid = _auth.currentUser!.uid;
+
+    final snapshot = await _firestore
+        .collection("bookings")
+        .where("vendorId", isEqualTo: uid)
+        .get();
+
+    final counts = <String, int>{};
+
+    for (final doc in snapshot.docs) {
+      final promotionId = doc.data()["promotionId"] as String? ?? "";
+
+      if (promotionId.isEmpty) continue;
+
+      counts[promotionId] = (counts[promotionId] ?? 0) + 1;
+    }
+
+    return counts;
+  }
+
   Future<List<VenueModel>> getVendorVenues() async {
     final uid = _auth.currentUser!.uid;
 

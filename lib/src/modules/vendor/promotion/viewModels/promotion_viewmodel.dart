@@ -9,15 +9,23 @@ class PromotionViewModel extends ChangeNotifier {
   bool isLoading = false;
 
   List<PromotionModel> promotions = [];
+  Map<String, int> usageCounts = {};
 
   Future<void> loadPromotions() async {
     isLoading = true;
     notifyListeners();
 
     promotions = await _service.getPromotions();
+    usageCounts = await _service.getUsageCounts();
 
     isLoading = false;
     notifyListeners();
+  }
+
+  Future<void> reapplyPromotion(String id) async {
+    await _service.reapplyPromotion(id);
+
+    await loadPromotions();
   }
 
   Future<void> createPromotion(PromotionModel promotion) async {
