@@ -57,6 +57,13 @@ class DashboardHeader extends StatelessWidget {
               const SizedBox(height: 4),
 
               Text("$userName!", style: AppTextStyles.heading2),
+
+              const SizedBox(height: 4),
+
+              Text(
+                "${DateTime.now().day}/${DateTime.now().month}/${DateTime.now().year}",
+                style: const TextStyle(color: Colors.grey, fontSize: 13),
+              ),
             ],
           ),
         ),
