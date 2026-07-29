@@ -217,7 +217,7 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
                 const SizedBox(height: 16),
 
                 SizedBox(
-                  height: 175,
+                  height: 210,
                   child: viewModel.latestBookings.isEmpty
                       ? const Center(child: Text("No bookings yet"))
                       : ListView.builder(

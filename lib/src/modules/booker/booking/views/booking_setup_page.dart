@@ -111,7 +111,7 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
                 const SizedBox(height: 20),
 
                 SizedBox(
-                  height: 420,
+                  height: 440,
                   child: PageView.builder(
                     controller: _pageController,
                     itemCount: vm.venues.length,
@@ -169,6 +169,8 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
                                 Expanded(
                                   child: Text(
                                     venue.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
                                       fontSize: 26,
                                       fontWeight: FontWeight.bold,
@@ -186,7 +188,13 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
                               children: [
                                 const Icon(Icons.location_on),
                                 const SizedBox(width: 8),
-                                Expanded(child: Text(venue.address)),
+                                Expanded(
+                                  child: Text(
+                                    venue.address,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 20),
