@@ -103,15 +103,55 @@ class _VendorSchedulePageState extends State<VendorSchedulePage> {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (vm.bookings.isEmpty) {
+    return DefaultTabController(
+      length: 3,
+      child: Column(
+        children: [
+          const TabBar(
+            tabs: [
+              Tab(text: "Ongoing"),
+              Tab(text: "Completed"),
+              Tab(text: "Cancelled"),
+            ],
+          ),
+
+          Expanded(
+            child: TabBarView(
+              children: [
+                _buildBookingList(vm, "ongoing"),
+                _buildBookingList(vm, "completed"),
+                _buildBookingList(vm, "cancelled"),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBookingList(BookingScheduleViewModel vm, String type) {
+    final bookings = vm.bookings.where((booking) {
+      switch (type) {
+        case "completed":
+          return booking.status == "completed";
+        case "cancelled":
+          return booking.status == "cancelled" || booking.status == "rejected";
+        default:
+          return booking.status != "completed" &&
+              booking.status != "cancelled" &&
+              booking.status != "rejected";
+      }
+    }).toList();
+
+    if (bookings.isEmpty) {
       return const Center(child: Text("No bookings yet."));
     }
 
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: vm.bookings.length,
+      itemCount: bookings.length,
       itemBuilder: (context, index) {
-        final booking = vm.bookings[index];
+        final booking = bookings[index];
 
         return Card(
           margin: const EdgeInsets.only(bottom: 16),
@@ -196,20 +236,18 @@ class _VendorSchedulePageState extends State<VendorSchedulePage> {
 
                 const SizedBox(height: 16),
 
-                Chip(
-                  backgroundColor: booking.status == "approved"
-                      ? Colors.green
-                      : booking.status == "rejected"
-                      ? Colors.red
-                      : Colors.orange,
+                if (booking.status == "pending") ...[
+                  const Chip(
+                    backgroundColor: Colors.orange,
 
-                  label: Text(
-                    booking.status.toUpperCase(),
-                    style: const TextStyle(color: Colors.white),
+                    label: Text(
+                      "PENDING",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
-                ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
+                ],
 
                 if (booking.status == "pending")
                   Row(
@@ -326,7 +364,7 @@ class _VendorSchedulePageState extends State<VendorSchedulePage> {
                   color = Colors.orange;
                 }
 
-                if (slot.status == "booked") {
+                if (slot.status == "occupied" || slot.status == "booked") {
                   color = Colors.red;
                 }
 
