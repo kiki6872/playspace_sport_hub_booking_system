@@ -5,6 +5,7 @@ import 'package:playspace_sport_hub_booking_system/src/models/booking_model.dart
 import 'package:playspace_sport_hub_booking_system/src/models/booking_schedule_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/slot_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/reward/services/reward_service.dart';
+import 'package:playspace_sport_hub_booking_system/src/models/promotion_model.dart';
 
 class BookingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -66,6 +67,66 @@ class BookingService {
         "slots": schedule.slots.map((e) => e.toMap()).toList(),
       });
     });
+
+    // Bookings are auto-approved with no vendor review step, so the vendor
+    // is paid as soon as the booking is made rather than waiting for
+    // autoCompleteBookings() to run once the booking date passes.
+    await RevenueService().addRevenue(
+      vendorId: booking.vendorId,
+      amount: booking.totalPrice,
+    );
+
+    await bookingRef.update({"revenueAdded": true});
+  }
+
+  /// Finds the best matching active, admin-approved promotion for this
+  /// venue/vendor on the given booking date (highest discount wins if more
+  /// than one applies). Returns null if none apply.
+  Future<PromotionModel?> getApplicablePromotion({
+    required String vendorId,
+    required String venueId,
+    required DateTime date,
+  }) async {
+    final snapshot = await _firestore
+        .collection("promotions")
+        .where("vendorId", isEqualTo: vendorId)
+        .where("status", isEqualTo: "approved")
+        .where("isActive", isEqualTo: true)
+        .get();
+
+    final day = DateTime(date.year, date.month, date.day);
+
+    final matching = snapshot.docs
+        .map((doc) => PromotionModel.fromMap(doc.data()))
+        .where((promotion) {
+          final start = DateTime(
+            promotion.startDate.year,
+            promotion.startDate.month,
+            promotion.startDate.day,
+          );
+          final end = DateTime(
+            promotion.endDate.year,
+            promotion.endDate.month,
+            promotion.endDate.day,
+          );
+
+          final inRange =
+              !day.isBefore(start) && !day.isAfter(end);
+          final appliesToVenue =
+              promotion.applyTo == "all" ||
+              promotion.venueIds.contains(venueId);
+
+          return inRange && appliesToVenue;
+        })
+        .toList();
+
+    if (matching.isEmpty) return null;
+
+    matching.sort(
+      (a, b) => b.discountPercentage.compareTo(a.discountPercentage),
+    );
+
+    return matching.first;
   }
 
   Future<List<BookingModel>> getBookerBookings() async {
@@ -149,8 +210,26 @@ class BookingService {
     final scheduleRef = scheduleQuery.docs.first.reference;
     final bookingRef = _firestore.collection('bookings').doc(booking.id);
 
+    var reverseAmount = 0.0;
+    var reverseVendorId = '';
+
     // 2. Update booking status and free the slot atomically
     await _firestore.runTransaction((transaction) async {
+      final bookingSnapshot = await transaction.get(bookingRef);
+
+      if (!bookingSnapshot.exists) {
+        throw Exception('Booking ${booking.id} not found.');
+      }
+
+      final freshBooking = BookingModel.fromMap(bookingSnapshot.data()!);
+
+      if (freshBooking.status == "cancelled" ||
+          freshBooking.status == "completed") {
+        throw Exception(
+          'Booking ${booking.id} cannot be cancelled (status: ${freshBooking.status}).',
+        );
+      }
+
       final scheduleSnapshot = await transaction.get(scheduleRef);
 
       final schedule = BookingScheduleModel.fromMap(scheduleSnapshot.data()!);
@@ -176,11 +255,26 @@ class BookingService {
         status: "available",
       );
 
-      transaction.update(bookingRef, {"status": "cancelled"});
+      final updates = <String, dynamic>{"status": "cancelled"};
+
+      if (freshBooking.revenueAdded) {
+        updates["revenueAdded"] = false;
+        reverseAmount = freshBooking.totalPrice;
+        reverseVendorId = freshBooking.vendorId;
+      }
+
+      transaction.update(bookingRef, updates);
       transaction.update(scheduleRef, {
         "slots": schedule.slots.map((e) => e.toMap()).toList(),
       });
     });
+
+    if (reverseVendorId.isNotEmpty) {
+      await RevenueService().reverseRevenue(
+        vendorId: reverseVendorId,
+        amount: reverseAmount,
+      );
+    }
   }
 
   Future<void> autoCompleteBookings() async {

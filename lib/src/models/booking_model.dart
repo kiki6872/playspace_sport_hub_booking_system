@@ -23,6 +23,7 @@ class BookingModel {
   final bool isReviewed;
   final bool rewardGiven;
   final bool revenueAdded;
+  final String promotionId;
 
   BookingModel({
     required this.id,
@@ -41,6 +42,7 @@ class BookingModel {
     required this.isReviewed,
     required this.rewardGiven,
     required this.revenueAdded,
+    this.promotionId = "",
   });
 
   Map<String, dynamic> toMap() {
@@ -61,6 +63,7 @@ class BookingModel {
       'isReviewed': isReviewed,
       'rewardGiven': rewardGiven,
       'revenueAdded': revenueAdded,
+      'promotionId': promotionId,
     };
   }
 
@@ -82,6 +85,7 @@ class BookingModel {
       isReviewed: map['isReviewed'] ?? false,
       rewardGiven: map['rewardGiven'] ?? false,
       revenueAdded: map["revenueAdded"] ?? false,
+      promotionId: map["promotionId"] ?? "",
     );
   }
 }

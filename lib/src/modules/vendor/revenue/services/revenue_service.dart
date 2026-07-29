@@ -5,7 +5,6 @@ import 'package:playspace_sport_hub_booking_system/src/models/booking_model.dart
 import 'package:playspace_sport_hub_booking_system/src/models/vendor_wallet_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/withdrawal_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/monthly_earning_model.dart';
-import 'package:intl/intl.dart';
 
 class RevenueService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -32,16 +31,27 @@ class RevenueService {
     return VendorWalletModel.fromMap(doc.data()!);
   }
 
+  /// Bookings whose payment has actually been credited to this vendor's
+  /// wallet - i.e. revenueAdded is true. Since revenue is now credited as
+  /// soon as a booking is created (not only once it's completed), this
+  /// covers ongoing and completed bookings, and excludes any booking whose
+  /// revenue was reversed on cancellation.
   Future<List<BookingModel>> getPaymentHistory() async {
     final uid = _auth.currentUser!.uid;
 
     final snapshot = await _firestore
         .collection("bookings")
         .where("vendorId", isEqualTo: uid)
-        .where("status", isEqualTo: "completed")
+        .where("revenueAdded", isEqualTo: true)
         .get();
 
-    return snapshot.docs.map((e) => BookingModel.fromMap(e.data())).toList();
+    final bookings = snapshot.docs
+        .map((e) => BookingModel.fromMap(e.data()))
+        .toList();
+
+    bookings.sort((a, b) => b.bookingDate.compareTo(a.bookingDate));
+
+    return bookings;
   }
 
   Future<List<MonthlyEarningModel>> getMonthlySummary() async {
@@ -50,7 +60,7 @@ class RevenueService {
     final snapshot = await _firestore
         .collection("bookings")
         .where("vendorId", isEqualTo: uid)
-        .where("status", isEqualTo: "completed")
+        .where("revenueAdded", isEqualTo: true)
         .get();
 
     final Map<String, double> monthlyRevenue = {};
@@ -58,8 +68,7 @@ class RevenueService {
     for (final doc in snapshot.docs) {
       final booking = BookingModel.fromMap(doc.data());
 
-      final key =
-          "${booking.bookingDate.year}-${booking.bookingDate.month.toString().padLeft(2, '0')}";
+      final key = "${booking.bookingDate.year}-${booking.bookingDate.month}";
 
       monthlyRevenue[key] = (monthlyRevenue[key] ?? 0) + booking.totalPrice;
     }
@@ -67,15 +76,17 @@ class RevenueService {
     final result = monthlyRevenue.entries.map((e) {
       final parts = e.key.split("-");
 
-      final date = DateTime(int.parse(parts[0]), int.parse(parts[1]));
-
       return MonthlyEarningModel(
-        month: DateFormat("MMMM yyyy").format(date),
+        year: int.parse(parts[0]),
+        month: int.parse(parts[1]),
         amount: e.value,
       );
     }).toList();
 
-    result.sort((a, b) => b.month.compareTo(a.month));
+    result.sort((a, b) {
+      final yearCompare = a.year.compareTo(b.year);
+      return yearCompare != 0 ? yearCompare : a.month.compareTo(b.month);
+    });
 
     return result;
   }
@@ -175,6 +186,26 @@ class RevenueService {
           "totalRevenue": FieldValue.increment(amount),
         });
       }
+    });
+  }
+
+  /// Reverses a previously-credited addRevenue() call, e.g. when a booking
+  /// whose revenue was already added gets cancelled.
+  Future<void> reverseRevenue({
+    required String vendorId,
+    required double amount,
+  }) async {
+    final walletRef = _firestore.collection("vendor_wallet").doc(vendorId);
+
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(walletRef);
+
+      if (!snapshot.exists) return;
+
+      transaction.update(walletRef, {
+        "balance": FieldValue.increment(-amount),
+        "totalRevenue": FieldValue.increment(-amount),
+      });
     });
   }
 

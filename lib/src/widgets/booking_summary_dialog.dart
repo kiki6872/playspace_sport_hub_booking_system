@@ -8,6 +8,7 @@ class BookingSummaryDialog extends StatelessWidget {
   final double discount;
   final double total;
   final String? voucher;
+  final String? promotion;
   final VoidCallback onConfirm;
 
   const BookingSummaryDialog({
@@ -19,6 +20,7 @@ class BookingSummaryDialog extends StatelessWidget {
     required this.discount,
     required this.total,
     this.voucher,
+    this.promotion,
     required this.onConfirm,
   });
 
@@ -81,6 +83,9 @@ class BookingSummaryDialog extends StatelessWidget {
             const Divider(height: 30),
 
             buildRow("Price", "RM ${price.toStringAsFixed(2)}"),
+
+            if (promotion != null)
+              buildRow("Promotion", promotion!, color: Colors.green),
 
             if (voucher != null)
               buildRow("Voucher", voucher!, color: Colors.orange),

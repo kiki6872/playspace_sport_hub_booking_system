@@ -10,7 +10,9 @@ import 'package:playspace_sport_hub_booking_system/src/modules/vendor/schedule/s
 import 'package:playspace_sport_hub_booking_system/src/models/venue_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/booking_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/booking/viewModels/booking_viewmodel.dart';
+import 'package:playspace_sport_hub_booking_system/src/modules/booker/booking/services/booking_service.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/user_voucher_model.dart';
+import 'package:playspace_sport_hub_booking_system/src/models/promotion_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/reward/services/reward_service.dart';
 import 'package:playspace_sport_hub_booking_system/src/widgets/booking_summary_dialog.dart';
 import 'package:playspace_sport_hub_booking_system/src/enums/booking_type.dart';
@@ -42,14 +44,18 @@ class _BookingPageState extends State<BookingPage> {
 
   final TextEditingController descriptionController = TextEditingController();
   final RewardService _rewardService = RewardService();
+  final BookingService _bookingService = BookingService();
 
   List<UserVoucherModel> vouchers = [];
   UserVoucherModel? selectedVoucher;
+
+  PromotionModel? appliedPromotion;
 
   @override
   void initState() {
     super.initState();
     loadVoucher();
+    loadApplicablePromotion();
   }
 
   Future<void> loadVoucher() async {
@@ -60,18 +66,37 @@ class _BookingPageState extends State<BookingPage> {
     });
   }
 
+  Future<void> loadApplicablePromotion() async {
+    final promotion = await _bookingService.getApplicablePromotion(
+      vendorId: widget.venue.vendorId,
+      venueId: widget.venue.id,
+      date: widget.bookingDate,
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      appliedPromotion = promotion;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final bookingViewModel = context.read<BookingViewModel>();
-    double discount = bookingType == BookingType.own
+
+    // Promotion discount is deducted first, then any booker-selected
+    // voucher stacks on top of that.
+    double promotionDiscount = appliedPromotion != null
+        ? widget.venue.pricePerHour * (appliedPromotion!.discountPercentage / 100)
+        : 0;
+
+    double voucherDiscount = bookingType == BookingType.own
         ? (selectedVoucher?.discount.toDouble() ?? 0)
         : 0;
 
-    double total = widget.venue.pricePerHour - discount;
+    double discount = promotionDiscount + voucherDiscount;
 
-    if (total < 0) {
-      total = 0;
-    }
+    double total = widget.venue.pricePerHour - discount;
 
     if (total < 0) {
       total = 0;
@@ -259,6 +284,19 @@ class _BookingPageState extends State<BookingPage> {
                 ),
               ),
 
+              if (appliedPromotion != null) ...[
+                const SizedBox(height: 10),
+
+                Text(
+                  "Discount (${appliedPromotion!.discountPercentage.toStringAsFixed(0)}% Promotion) : "
+                  "-RM${promotionDiscount.toStringAsFixed(2)}",
+                  style: const TextStyle(
+                    color: Colors.green,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+
               if (selectedVoucher != null) ...[
                 const SizedBox(height: 10),
 
@@ -300,6 +338,9 @@ class _BookingPageState extends State<BookingPage> {
                         discount: discount,
                         total: total,
                         voucher: selectedVoucher?.title,
+                        promotion: appliedPromotion != null
+                            ? "${appliedPromotion!.discountPercentage.toStringAsFixed(0)}% OFF"
+                            : null,
                         onConfirm: () async {
                           Navigator.pop(context);
 
@@ -344,6 +385,8 @@ class _BookingPageState extends State<BookingPage> {
                             rewardGiven: false,
 
                             revenueAdded: false,
+
+                            promotionId: appliedPromotion?.id ?? "",
                           );
 
                           if (selectedVoucher != null) {

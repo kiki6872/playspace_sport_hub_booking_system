@@ -234,48 +234,6 @@ class _VendorSchedulePageState extends State<VendorSchedulePage> {
                   ],
                 ),
 
-                const SizedBox(height: 16),
-
-                if (booking.status == "pending") ...[
-                  const Chip(
-                    backgroundColor: Colors.orange,
-
-                    label: Text(
-                      "PENDING",
-                      style: TextStyle(color: Colors.white),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-                ],
-
-                if (booking.status == "pending")
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () {
-                            vm.approveBooking(booking.id);
-                          },
-                          child: const Text("Approve"),
-                        ),
-                      ),
-
-                      const SizedBox(width: 12),
-
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.red,
-                          ),
-                          onPressed: () {
-                            vm.rejectBooking(booking.id);
-                          },
-                          child: const Text("Reject"),
-                        ),
-                      ),
-                    ],
-                  ),
               ],
             ),
           ),
