@@ -37,7 +37,8 @@ class ReportsService {
     double revenue = 0;
 
     for (final doc in snapshot.docs) {
-      revenue += (doc["totalPrice"] as num).toDouble();
+      final data = doc.data();
+      revenue += ((data["totalPrice"] as num?) ?? 0).toDouble();
     }
 
     return revenue;

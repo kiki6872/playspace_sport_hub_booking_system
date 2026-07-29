@@ -81,6 +81,7 @@ class BookingScheduleService {
       print("SUCCESS");
     } catch (e) {
       print("ERROR: $e");
+      rethrow;
     }
   }
 
@@ -130,19 +131,42 @@ class BookingScheduleService {
     required String slotId,
     required String status,
   }) async {
-    final index = schedule.slots.indexWhere((slot) => slot.id == slotId);
+    final docRef = _firestore.collection("booking_schedule").doc(schedule.id);
 
-    if (index == -1) return;
+    // Read-modify-write inside a transaction so this doesn't race with
+    // concurrent writers of the same document's `slots` array (e.g. a
+    // booker creating/cancelling a booking via BookingService, which also
+    // rewrites the whole `slots` array). Without this, whichever write
+    // lands last silently clobbers the other's change.
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(docRef);
 
-    schedule.slots[index] = SlotModel(
-      id: schedule.slots[index].id,
-      startTime: schedule.slots[index].startTime,
-      endTime: schedule.slots[index].endTime,
-      status: status,
-    );
+      if (!snapshot.exists) {
+        throw Exception("Schedule ${schedule.id} not found");
+      }
 
-    await _firestore.collection("booking_schedule").doc(schedule.id).update({
-      "slots": schedule.slots.map((slot) => slot.toMap()).toList(),
+      final freshSchedule = BookingScheduleModel.fromMap(snapshot.data()!);
+
+      final index = freshSchedule.slots.indexWhere(
+        (slot) => slot.id == slotId,
+      );
+
+      if (index == -1) {
+        throw Exception(
+          "Slot $slotId not found in schedule ${schedule.id}",
+        );
+      }
+
+      freshSchedule.slots[index] = SlotModel(
+        id: freshSchedule.slots[index].id,
+        startTime: freshSchedule.slots[index].startTime,
+        endTime: freshSchedule.slots[index].endTime,
+        status: status,
+      );
+
+      transaction.update(docRef, {
+        "slots": freshSchedule.slots.map((slot) => slot.toMap()).toList(),
+      });
     });
   }
 
@@ -180,20 +204,11 @@ class BookingScheduleService {
     required BookingScheduleModel schedule,
     required String slotId,
   }) async {
-    final index = schedule.slots.indexWhere((slot) => slot.id == slotId);
-
-    if (index == -1) return;
-
-    schedule.slots[index] = SlotModel(
-      id: schedule.slots[index].id,
-      startTime: schedule.slots[index].startTime,
-      endTime: schedule.slots[index].endTime,
+    await updateSlotStatus(
+      schedule: schedule,
+      slotId: slotId,
       status: "occupied",
     );
-
-    await _firestore.collection("booking_schedule").doc(schedule.id).update({
-      "slots": schedule.slots.map((e) => e.toMap()).toList(),
-    });
   }
 
   ///====================================================

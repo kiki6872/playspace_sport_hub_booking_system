@@ -79,16 +79,9 @@ class _EarningsPageState extends State<EarningsPage> {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(content: Text(e.toString())),
                               );
+
+                              await vm.loadData();
                             }
-                            await vm.loadData();
-
-                            if (!mounted) return;
-
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text("Withdrawal successful."),
-                              ),
-                            );
                           },
                         ),
                       );

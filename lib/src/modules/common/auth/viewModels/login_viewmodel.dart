@@ -60,6 +60,11 @@ class LoginViewModel extends ChangeNotifier {
         return 'User profile not found.';
       }
 
+      if (user.status != 'active') {
+        await _authService.logout();
+        return 'Your account has been suspended. Please contact support.';
+      }
+
       return user.role;
     } on FirebaseAuthException catch (e) {
       switch (e.code) {

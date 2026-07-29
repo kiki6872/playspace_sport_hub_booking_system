@@ -13,12 +13,14 @@ class ChangePasswordViewModel extends ChangeNotifier {
     isLoading = true;
     notifyListeners();
 
-    await _service.changePassword(
-      currentPassword: currentPassword,
-      newPassword: newPassword,
-    );
-
-    isLoading = false;
-    notifyListeners();
+    try {
+      await _service.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 }

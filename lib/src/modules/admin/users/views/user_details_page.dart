@@ -121,8 +121,8 @@ class UserDetailsPage extends StatelessWidget {
                     builder: (_) => ConfirmationDialog(
                       title: "Delete User",
                       message: "Are you sure you want to delete this user?",
-                      onConfirm: () async {
-                        await viewModel.deleteUser();
+                      onConfirm: () {
+                        Navigator.pop(context, true);
                       },
                     ),
                   );

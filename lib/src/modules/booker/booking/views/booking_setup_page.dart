@@ -6,6 +6,7 @@ import 'package:playspace_sport_hub_booking_system/src/models/booking_schedule_m
 
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/dashboard/viewModels/dashboard_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/booking/views/booking_page.dart';
+import 'package:playspace_sport_hub_booking_system/src/modules/booker/review/viewModels/review_viewmodel.dart';
 
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/schedule/services/booking_schedule_service.dart';
 
@@ -20,6 +21,8 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
   late PageController _pageController;
 
   VenueModel? selectedVenue;
+
+  int currentReview = 0;
 
   DateTime selectedDate = DateTime(
     DateTime.now().year,
@@ -49,6 +52,7 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
         await loadSchedule();
 
         if (mounted) {
+          context.read<ReviewViewModel>().loadVenueReviews(selectedVenue!.id);
           setState(() {});
         }
       }
@@ -116,10 +120,14 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
 
                       selectedStartTime = null;
                       selectedEndTime = null;
+                      currentReview = 0;
 
                       await loadSchedule();
 
                       if (mounted) {
+                        context.read<ReviewViewModel>().loadVenueReviews(
+                          selectedVenue!.id,
+                        );
                         setState(() {});
                       }
                     },
@@ -277,7 +285,88 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
 
                 const SizedBox(height: 10),
 
-                const Text("No reviews yet."),
+                Consumer<ReviewViewModel>(
+                  builder: (context, reviewVM, child) {
+                    final review = reviewVM.reviews.isNotEmpty
+                        ? reviewVM.reviews[currentReview.clamp(
+                            0,
+                            reviewVM.reviews.length - 1,
+                          )]
+                        : null;
+
+                    if (review == null) {
+                      return const Text(
+                        "No reviews yet.",
+                        style: TextStyle(color: Colors.grey),
+                      );
+                    }
+
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(15),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade900,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    review.bookerName,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  const Icon(Icons.star, color: Colors.amber),
+                                  Text(review.rating.toString()),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              Text(review.comment),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 15),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.chevron_left),
+                              onPressed: currentReview == 0
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        currentReview--;
+                                      });
+                                    },
+                            ),
+                            Text(
+                              "${currentReview + 1} / ${reviewVM.reviews.length}",
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.chevron_right),
+                              onPressed:
+                                  currentReview == reviewVM.reviews.length - 1
+                                  ? null
+                                  : () {
+                                      setState(() {
+                                        currentReview++;
+                                      });
+                                    },
+                            ),
+                          ],
+                        ),
+                      ],
+                    );
+                  },
+                ),
 
                 const SizedBox(height: 30),
 
@@ -403,7 +492,7 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
         child: SizedBox(
           height: 55,
           child: ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
               if (selectedVenue == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text("Please select a venue.")),
@@ -418,7 +507,7 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
                 return;
               }
 
-              Navigator.push(
+              await Navigator.push(
                 context,
                 MaterialPageRoute(
                   builder: (_) => BookingPage(
@@ -429,6 +518,13 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
                   ),
                 ),
               );
+
+              // Refresh the Home tab's "My Bookings" preview so it reflects
+              // any booking created/cancelled while on the BookingPage,
+              // instead of showing stale data from initial page load.
+              if (mounted) {
+                context.read<DashboardViewModel>().loadLatestBookings();
+              }
             },
             child: const Text("Continue"),
           ),

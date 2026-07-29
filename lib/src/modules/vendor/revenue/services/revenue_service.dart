@@ -108,30 +108,44 @@ class RevenueService {
     final accountNumber = data["accountNumber"];
     final accountHolderName = data["accountHolderName"];
 
+    // Ensure the wallet document exists before entering the transaction
+    // (Firestore transactions can't create-then-read-back a doc that was
+    // just lazily created by a plain get()).
+    await getWallet();
+
     final walletRef = _firestore.collection("vendor_wallet").doc(uid);
+    final withdrawalRef = _firestore.collection("withdrawals").doc();
 
-    final wallet = await getWallet();
+    // Read balance, decrement it, and write the withdrawal record all in one
+    // transaction so a mid-flight failure can never leave the balance
+    // decremented without a matching withdrawal record (or vice versa), and
+    // so the balance check can't race with a concurrent withdrawal.
+    await _firestore.runTransaction((transaction) async {
+      final walletSnapshot = await transaction.get(walletRef);
 
-    if (wallet.balance < amount) {
-      throw Exception("Insufficient balance");
-    }
+      final balance = walletSnapshot.exists
+          ? VendorWalletModel.fromMap(walletSnapshot.data()!).balance
+          : 0.0;
 
-    await walletRef.update({
-      "balance": FieldValue.increment(-amount),
-      "totalWithdrawn": FieldValue.increment(amount),
-    });
+      if (balance < amount) {
+        throw Exception("Insufficient balance");
+      }
 
-    final doc = _firestore.collection("withdrawals").doc();
+      transaction.update(walletRef, {
+        "balance": FieldValue.increment(-amount),
+        "totalWithdrawn": FieldValue.increment(amount),
+      });
 
-    await doc.set({
-      "id": doc.id,
-      "vendorId": uid,
-      "amount": amount,
-      "bankName": bankName,
-      "accountNumber": accountNumber,
-      "accountHolderName": accountHolderName,
-      "status": "Completed",
-      "requestedAt": DateTime.now().toIso8601String(),
+      transaction.set(withdrawalRef, {
+        "id": withdrawalRef.id,
+        "vendorId": uid,
+        "amount": amount,
+        "bankName": bankName,
+        "accountNumber": accountNumber,
+        "accountHolderName": accountHolderName,
+        "status": "Completed",
+        "requestedAt": DateTime.now().toIso8601String(),
+      });
     });
   }
 
@@ -141,21 +155,27 @@ class RevenueService {
   }) async {
     final walletRef = _firestore.collection("vendor_wallet").doc(vendorId);
 
-    final doc = await walletRef.get();
+    // Read-then-branch-then-write must happen atomically: without a
+    // transaction, two concurrent addRevenue calls for a vendor with no
+    // existing wallet doc could both see "not exists" and both call set(),
+    // with the second overwriting (not adding to) the first's amount.
+    await _firestore.runTransaction((transaction) async {
+      final snapshot = await transaction.get(walletRef);
 
-    if (!doc.exists) {
-      await walletRef.set({
-        "vendorId": vendorId,
-        "balance": amount,
-        "totalRevenue": amount,
-        "totalWithdrawn": 0,
-      });
-    } else {
-      await walletRef.update({
-        "balance": FieldValue.increment(amount),
-        "totalRevenue": FieldValue.increment(amount),
-      });
-    }
+      if (!snapshot.exists) {
+        transaction.set(walletRef, {
+          "vendorId": vendorId,
+          "balance": amount,
+          "totalRevenue": amount,
+          "totalWithdrawn": 0,
+        });
+      } else {
+        transaction.update(walletRef, {
+          "balance": FieldValue.increment(amount),
+          "totalRevenue": FieldValue.increment(amount),
+        });
+      }
+    });
   }
 
   Future<void> syncRevenueFromBookings() async {
@@ -233,29 +253,39 @@ class RevenueService {
     final accountHolderName = data["accountHolderName"];
 
     final walletRef = _firestore.collection("vendor_wallet").doc(vendorId);
+    final withdrawalRef = _firestore.collection("withdrawals").doc();
 
-    final wallet = await getWallet();
+    // Bug fix: this used to call getWallet(), which reads the wallet of
+    // FirebaseAuth.instance.currentUser — not the `vendorId` passed in — so
+    // an auto-withdraw run for vendor A could check vendor B's (or the
+    // caller's own) balance instead. Read the target vendor's wallet doc
+    // directly, and do the balance check + writes atomically like withdraw().
+    await _firestore.runTransaction((transaction) async {
+      final walletSnapshot = await transaction.get(walletRef);
 
-    if (wallet.balance < amount) {
-      throw Exception("Insufficient balance for vendor $vendorId");
-    }
+      final balance = walletSnapshot.exists
+          ? VendorWalletModel.fromMap(walletSnapshot.data()!).balance
+          : 0.0;
 
-    await walletRef.update({
-      "balance": FieldValue.increment(-amount),
-      "totalWithdrawn": FieldValue.increment(amount),
-    });
+      if (balance < amount) {
+        throw Exception("Insufficient balance for vendor $vendorId");
+      }
 
-    final doc = _firestore.collection("withdrawals").doc();
+      transaction.update(walletRef, {
+        "balance": FieldValue.increment(-amount),
+        "totalWithdrawn": FieldValue.increment(amount),
+      });
 
-    await doc.set({
-      "id": doc.id,
-      "vendorId": vendorId,
-      "amount": amount,
-      "bankName": bankName,
-      "accountNumber": accountNumber,
-      "accountHolderName": accountHolderName,
-      "status": "Completed",
-      "requestedAt": DateTime.now().toIso8601String(),
+      transaction.set(withdrawalRef, {
+        "id": withdrawalRef.id,
+        "vendorId": vendorId,
+        "amount": amount,
+        "bankName": bankName,
+        "accountNumber": accountNumber,
+        "accountHolderName": accountHolderName,
+        "status": "Completed",
+        "requestedAt": DateTime.now().toIso8601String(),
+      });
     });
   }
 }

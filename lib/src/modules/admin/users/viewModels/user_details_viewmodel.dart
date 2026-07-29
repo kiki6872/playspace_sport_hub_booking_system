@@ -34,7 +34,7 @@ class UserDetailsViewModel extends ChangeNotifier {
       phone: _user.phone,
       role: _selectedRole,
       status: _user.status,
-      profileImage: "",
+      profileImage: _user.profileImage,
     );
 
     notifyListeners();
@@ -52,7 +52,7 @@ class UserDetailsViewModel extends ChangeNotifier {
       phone: _user.phone,
       role: _user.role,
       status: newStatus,
-      profileImage: "",
+      profileImage: _user.profileImage,
     );
 
     notifyListeners();

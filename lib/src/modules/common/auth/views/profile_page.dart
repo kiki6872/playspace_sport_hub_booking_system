@@ -71,7 +71,6 @@ class _ProfilePageState extends State<ProfilePage> {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Profile image updated.")),
                       );
-                      await vm.updateProfileImage(url);
                     },
                     child: CircleAvatar(
                       radius: 45,

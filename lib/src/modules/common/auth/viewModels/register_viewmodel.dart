@@ -91,7 +91,20 @@ class RegisterViewModel extends ChangeNotifier {
         profileImage: "",
       );
 
-      await _userService.createUser(user);
+      try {
+        await _userService.createUser(user);
+      } catch (e) {
+        // The Firebase Auth account was created but the Firestore profile
+        // write failed. Roll back the auth account so we don't leave an
+        // orphaned account (one that can never log in with a profile, and
+        // can never be re-registered because the email is already in use).
+        try {
+          await credential.user!.delete();
+        } catch (_) {
+          // Best-effort rollback; ignore secondary failure.
+        }
+        rethrow;
+      }
 
       return null;
     } on FirebaseAuthException catch (e) {
@@ -112,7 +125,7 @@ class RegisterViewModel extends ChangeNotifier {
       debugPrint('Register Error: $e');
       debugPrint(stackTrace.toString());
 
-      return e.toString();
+      return 'Failed to create your profile. Please try registering again.';
     } finally {
       setLoading(false);
     }
