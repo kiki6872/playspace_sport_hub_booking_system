@@ -1,6 +1,5 @@
 class BookingModel {
   final String id;
-
   final String venueId;
   final String venueName;
 

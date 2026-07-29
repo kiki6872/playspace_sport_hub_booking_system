@@ -3,36 +3,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class MatchModel {
   final String matchId;
   final String bookingId;
-
-  /// Host
   final String hostId;
   final String hostName;
-
-  /// Venue
-
   final double currentPricePerPerson;
-
-  /// equally / host
   final String paymentMethod;
-
-  /// Players
-
   final int maximumPlayers;
   final int currentPlayers;
-
-  /// Participants
   final List<Map<String, dynamic>> participants;
-
-  /// Match Details
   final String description;
-
-  /// waiting
-  /// ready
-  /// full
-  /// completed
-  /// cancelled
   final String status;
-
   final Timestamp createdAt;
 
   MatchModel({
