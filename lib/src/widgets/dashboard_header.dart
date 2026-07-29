@@ -60,16 +60,6 @@ class DashboardHeader extends StatelessWidget {
             ],
           ),
         ),
-
-        IconButton(
-          onPressed: () {
-            // Notification page nanti
-          },
-          icon: const Icon(
-            Icons.notifications_none_rounded,
-            color: Colors.white,
-          ),
-        ),
       ],
     );
   }
