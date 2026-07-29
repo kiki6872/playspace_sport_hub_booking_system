@@ -378,17 +378,6 @@ class _BookingPageState extends State<BookingPage> {
 
                           // Lepas tu baru try
                           try {
-                            final slot = schedule.slots.firstWhere(
-                              (e) =>
-                                  e.startTime == widget.startTime &&
-                                  e.endTime == widget.endTime,
-                            );
-
-                            await scheduleService.bookSlot(
-                              schedule: schedule,
-                              slotId: slot.id,
-                            );
-
                             await bookingViewModel.createBooking(booking);
 
                             if (bookingType == BookingType.match) {
