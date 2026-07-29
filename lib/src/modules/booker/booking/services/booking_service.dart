@@ -12,14 +12,8 @@ class BookingService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<void> createBooking(BookingModel booking) async {
-    // Save booking
-    await _firestore
-        .collection('bookings')
-        .doc(booking.id)
-        .set(booking.toMap());
-
     // Find schedule
-    final scheduleSnapshot = await _firestore
+    final scheduleQuery = await _firestore
         .collection("booking_schedule")
         .where("venueId", isEqualTo: booking.venueId)
         .where(
@@ -33,29 +27,44 @@ class BookingService {
         .limit(1)
         .get();
 
-    if (scheduleSnapshot.docs.isEmpty) return;
+    if (scheduleQuery.docs.isEmpty) {
+      throw Exception(
+        'No booking_schedule found for venue ${booking.venueId} on ${booking.bookingDate}',
+      );
+    }
 
-    final schedule = BookingScheduleModel.fromMap(
-      scheduleSnapshot.docs.first.data(),
-    );
+    final scheduleRef = scheduleQuery.docs.first.reference;
+    final bookingRef = _firestore.collection('bookings').doc(booking.id);
 
-    final index = schedule.slots.indexWhere(
-      (slot) =>
-          slot.startTime == booking.startTime &&
-          slot.endTime == booking.endTime,
-    );
+    // Save booking and mark the slot occupied atomically
+    await _firestore.runTransaction((transaction) async {
+      final scheduleSnapshot = await transaction.get(scheduleRef);
 
-    if (index == -1) return;
+      final schedule = BookingScheduleModel.fromMap(scheduleSnapshot.data()!);
 
-    schedule.slots[index] = SlotModel(
-      id: schedule.slots[index].id,
-      startTime: schedule.slots[index].startTime,
-      endTime: schedule.slots[index].endTime,
-      status: "occupied",
-    );
+      final index = schedule.slots.indexWhere(
+        (slot) =>
+            slot.startTime == booking.startTime &&
+            slot.endTime == booking.endTime,
+      );
 
-    await _firestore.collection("booking_schedule").doc(schedule.id).update({
-      "slots": schedule.slots.map((e) => e.toMap()).toList(),
+      if (index == -1) {
+        throw Exception(
+          'No matching slot ${booking.startTime}-${booking.endTime} in schedule ${schedule.id}',
+        );
+      }
+
+      schedule.slots[index] = SlotModel(
+        id: schedule.slots[index].id,
+        startTime: schedule.slots[index].startTime,
+        endTime: schedule.slots[index].endTime,
+        status: "occupied",
+      );
+
+      transaction.set(bookingRef, booking.toMap());
+      transaction.update(scheduleRef, {
+        "slots": schedule.slots.map((e) => e.toMap()).toList(),
+      });
     });
   }
 
@@ -113,13 +122,8 @@ class BookingService {
   }
 
   Future<void> cancelBooking(BookingModel booking) async {
-    // 1. Update booking status
-    await _firestore.collection("bookings").doc(booking.id).update({
-      "status": "cancelled",
-    });
-
-    // 2. Cari schedule
-    final scheduleSnapshot = await _firestore
+    // 1. Cari schedule
+    final scheduleQuery = await _firestore
         .collection("booking_schedule")
         .where("venueId", isEqualTo: booking.venueId)
         .where(
@@ -133,32 +137,46 @@ class BookingService {
         .limit(1)
         .get();
 
-    if (scheduleSnapshot.docs.isEmpty) return;
+    if (scheduleQuery.docs.isEmpty) {
+      throw Exception(
+        'No booking_schedule found for venue ${booking.venueId} on ${booking.bookingDate}',
+      );
+    }
 
-    final schedule = BookingScheduleModel.fromMap(
-      scheduleSnapshot.docs.first.data(),
-    );
+    final scheduleRef = scheduleQuery.docs.first.reference;
+    final bookingRef = _firestore.collection('bookings').doc(booking.id);
 
-    // 3. Cari slot
-    final index = schedule.slots.indexWhere(
-      (slot) =>
-          slot.startTime == booking.startTime &&
-          slot.endTime == booking.endTime,
-    );
+    // 2. Update booking status and free the slot atomically
+    await _firestore.runTransaction((transaction) async {
+      final scheduleSnapshot = await transaction.get(scheduleRef);
 
-    if (index == -1) return;
+      final schedule = BookingScheduleModel.fromMap(scheduleSnapshot.data()!);
 
-    // 4. Tukar occupied -> available
-    schedule.slots[index] = SlotModel(
-      id: schedule.slots[index].id,
-      startTime: schedule.slots[index].startTime,
-      endTime: schedule.slots[index].endTime,
-      status: "available",
-    );
+      // 3. Cari slot
+      final index = schedule.slots.indexWhere(
+        (slot) =>
+            slot.startTime == booking.startTime &&
+            slot.endTime == booking.endTime,
+      );
 
-    // 5. Save balik
-    await _firestore.collection("booking_schedule").doc(schedule.id).update({
-      "slots": schedule.slots.map((e) => e.toMap()).toList(),
+      if (index == -1) {
+        throw Exception(
+          'No matching slot ${booking.startTime}-${booking.endTime} in schedule ${schedule.id}',
+        );
+      }
+
+      // 4. Tukar occupied -> available
+      schedule.slots[index] = SlotModel(
+        id: schedule.slots[index].id,
+        startTime: schedule.slots[index].startTime,
+        endTime: schedule.slots[index].endTime,
+        status: "available",
+      );
+
+      transaction.update(bookingRef, {"status": "cancelled"});
+      transaction.update(scheduleRef, {
+        "slots": schedule.slots.map((e) => e.toMap()).toList(),
+      });
     });
   }
 
