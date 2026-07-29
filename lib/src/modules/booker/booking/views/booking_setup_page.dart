@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:playspace_sport_hub_booking_system/src/models/venue_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/booking_schedule_model.dart';
@@ -63,6 +64,16 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  Future<void> openGoogleMaps(String address) async {
+    final url = Uri.parse(
+      "https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(address)}",
+    );
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
   }
 
   Future<void> loadSchedule() async {
@@ -207,7 +218,7 @@ class _BookingSetupPageState extends State<BookingSetupPage> {
                                 ),
                               ),
                               onPressed: () {
-                                // Copy onPressed daripada VenueDetailsPage
+                                openGoogleMaps(venue.address);
                               },
                               icon: const Icon(Icons.map_outlined),
                               label: const Text("Open in Google Maps"),
