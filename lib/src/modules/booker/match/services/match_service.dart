@@ -27,26 +27,24 @@ class MatchService {
   Future<List<MatchWithBookingModel>> getOpenMatches() async {
     final uid = _auth.currentUser!.uid;
 
+    // Sorted client-side rather than via .orderBy() so this doesn't need a
+    // composite index (whereIn + orderBy on a different field) that isn't
+    // guaranteed to exist in this project.
     final snapshot = await _firestore
         .collection("matches")
-        .orderBy("createdAt", descending: true)
+        .where("status", whereIn: ["waiting", "ready"])
         .get();
 
-    List<MatchWithBookingModel> result = [];
+    final matches = snapshot.docs
+        .map((doc) => MatchModel.fromMap(doc.data()))
+        .where((match) => match.hostId != uid)
+        .toList();
 
-    for (final doc in snapshot.docs) {
-      final match = MatchModel.fromMap(doc.data());
+    matches.sort(
+      (a, b) => b.createdAt.compareTo(a.createdAt),
+    );
 
-      if (match.hostId == uid) continue;
-
-      if (!(match.status == "waiting" || match.status == "ready")) continue;
-
-      final booking = await _getBooking(match.bookingId);
-
-      result.add(MatchWithBookingModel(match: match, booking: booking));
-    }
-
-    return result;
+    return _attachBookings(matches);
   }
 
   /// ==========================
@@ -62,17 +60,31 @@ class MatchService {
         .orderBy("createdAt", descending: true)
         .get();
 
-    List<MatchWithBookingModel> result = [];
+    final matches = snapshot.docs
+        .map((doc) => MatchModel.fromMap(doc.data()))
+        .toList();
 
-    for (final doc in snapshot.docs) {
-      final match = MatchModel.fromMap(doc.data());
+    return _attachBookings(matches);
+  }
 
-      final booking = await _getBooking(match.bookingId);
+  /// Fetches each match's booking in parallel (rather than one Firestore
+  /// round-trip at a time) and silently drops any match whose bookingId no
+  /// longer resolves to a real booking doc, instead of letting one bad
+  /// match take down the whole list load.
+  Future<List<MatchWithBookingModel>> _attachBookings(
+    List<MatchModel> matches,
+  ) async {
+    final results = await Future.wait(
+      matches.map((match) async {
+        final booking = await _tryGetBooking(match.bookingId);
 
-      result.add(MatchWithBookingModel(match: match, booking: booking));
-    }
+        if (booking == null) return null;
 
-    return result;
+        return MatchWithBookingModel(match: match, booking: booking);
+      }),
+    );
+
+    return results.whereType<MatchWithBookingModel>().toList();
   }
 
   /// ==========================
@@ -170,11 +182,19 @@ class MatchService {
   }
 
   Future<BookingModel> _getBooking(String bookingId) async {
-    final doc = await _firestore.collection("bookings").doc(bookingId).get();
+    final booking = await _tryGetBooking(bookingId);
 
-    if (!doc.exists) {
+    if (booking == null) {
       throw Exception("Booking not found.");
     }
+
+    return booking;
+  }
+
+  Future<BookingModel?> _tryGetBooking(String bookingId) async {
+    final doc = await _firestore.collection("bookings").doc(bookingId).get();
+
+    if (!doc.exists) return null;
 
     return BookingModel.fromMap(doc.data()!);
   }

@@ -29,13 +29,15 @@ class MatchViewModel extends ChangeNotifier {
 
     notifyListeners();
 
-    _availableMatches = await _service.getOpenMatches();
+    try {
+      _availableMatches = await _service.getOpenMatches();
 
-    _myMatches = await _service.getMyMatches();
+      _myMatches = await _service.getMyMatches();
+    } finally {
+      _isLoading = false;
 
-    _isLoading = false;
-
-    notifyListeners();
+      notifyListeners();
+    }
   }
 
   Future<void> createMatch(MatchModel match) async {
