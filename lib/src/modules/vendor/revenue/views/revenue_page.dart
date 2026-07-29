@@ -26,104 +26,104 @@ class _EarningsPageState extends State<EarningsPage> {
   Widget build(BuildContext context) {
     final vm = context.watch<RevenueViewModel>();
 
-    if (vm.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    return Scaffold(
+      appBar: AppBar(title: const Text("Earnings")),
+      body: vm.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  buildWallet(vm),
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            "Earnings",
-            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-          ),
+                  const SizedBox(height: 20),
 
-          const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (vm.wallet == null || vm.wallet!.balance <= 0)
+                          ? null
+                          : () async {
+                              await showDialog(
+                                context: context,
+                                builder: (_) => ConfirmationDialog(
+                                  title: "Withdraw Earnings",
+                                  message:
+                                      "Withdraw RM ${vm.wallet?.balance.toStringAsFixed(2) ?? "0.00"} to your registered bank account?",
+                                  confirmButtonText: "Withdraw",
+                                  cancelButtonText: "Cancel",
+                                  onConfirm: () async {
+                                    Navigator.pop(context);
 
-          buildWallet(vm),
+                                    try {
+                                      await vm.withdraw();
 
-          const SizedBox(height: 20),
+                                      if (!mounted) return;
 
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: (vm.wallet == null || vm.wallet!.balance <= 0)
-                  ? null
-                  : () async {
-                      await showDialog(
-                        context: context,
-                        builder: (_) => ConfirmationDialog(
-                          title: "Withdraw Earnings",
-                          message:
-                              "Withdraw RM ${vm.wallet?.balance.toStringAsFixed(2) ?? "0.00"} to your registered bank account?",
-                          confirmButtonText: "Withdraw",
-                          cancelButtonText: "Cancel",
-                          onConfirm: () async {
-                            Navigator.pop(context);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            "Withdrawal successful.",
+                                          ),
+                                        ),
+                                      );
+                                    } catch (e) {
+                                      if (!mounted) return;
 
-                            try {
-                              await vm.withdraw();
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text(e.toString())),
+                                      );
 
-                              if (!mounted) return;
-
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text("Withdrawal successful."),
+                                      await vm.loadData();
+                                    }
+                                  },
                                 ),
                               );
-                            } catch (e) {
-                              if (!mounted) return;
+                            },
+                      child: const Text("Withdraw Earnings"),
+                    ),
+                  ),
 
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(e.toString())),
-                              );
+                  const SizedBox(height: 30),
 
-                              await vm.loadData();
-                            }
-                          },
-                        ),
-                      );
-                    },
-              child: const Text("Withdraw Earnings"),
+                  const Text(
+                    "Payment History",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  buildPaymentHistory(vm),
+
+                  const SizedBox(height: 30),
+
+                  const Text(
+                    "Withdrawal History",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  buildWithdrawHistory(vm),
+
+                  const SizedBox(height: 30),
+
+                  const Text(
+                    "Monthly Revenue Summary",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  buildMonthlySummary(vm),
+                ],
+              ),
             ),
-          ),
-
-          const SizedBox(height: 30),
-
-          const Text(
-            "Payment History",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 15),
-
-          buildPaymentHistory(vm),
-
-          const SizedBox(height: 30),
-
-          const Text(
-            "Withdrawal History",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 15),
-
-          buildWithdrawHistory(vm),
-
-          const SizedBox(height: 30),
-
-          const Text(
-            "Monthly Earnings Summary",
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-
-          const SizedBox(height: 15),
-
-          buildMonthlySummary(vm),
-        ],
-      ),
     );
   }
 
@@ -233,21 +233,101 @@ class _EarningsPageState extends State<EarningsPage> {
     );
   }
 
-  Widget buildMonthlySummary(RevenueViewModel vm) {
-    if (vm.monthlySummary.isEmpty) {
-      return const Text("No monthly earnings.");
-    }
+  static const _monthLabels = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
 
-    return Column(
-      children: vm.monthlySummary.map((month) {
-        return Card(
-          child: ListTile(
-            leading: const Icon(Icons.bar_chart),
-            title: Text(month.month),
-            trailing: Text("RM ${month.amount.toStringAsFixed(2)}"),
-          ),
-        );
-      }).toList(),
+  Widget buildMonthlySummary(RevenueViewModel vm) {
+    final year = DateTime.now().year;
+
+    final amounts = List<double>.generate(12, (index) {
+      final month = index + 1;
+
+      final match = vm.monthlySummary.where(
+        (m) => m.year == year && m.month == month,
+      );
+
+      return match.isEmpty ? 0.0 : match.first.amount;
+    });
+
+    final maxAmount = amounts.fold<double>(0, (a, b) => b > a ? b : a);
+
+    const chartHeight = 140.0;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "$year",
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+
+            const SizedBox(height: 20),
+
+            SizedBox(
+              height: chartHeight + 40,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: List.generate(12, (index) {
+                  final amount = amounts[index];
+
+                  final barHeight = maxAmount == 0
+                      ? 0.0
+                      : (amount / maxAmount) * chartHeight;
+
+                  return Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Text(
+                          amount > 0 ? amount.toStringAsFixed(0) : "",
+                          style: const TextStyle(fontSize: 9),
+                        ),
+
+                        const SizedBox(height: 4),
+
+                        Container(
+                          height: amount > 0 ? barHeight.clamp(3, chartHeight) : 2,
+                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                          decoration: BoxDecoration(
+                            color: amount > 0
+                                ? Colors.green
+                                : Colors.grey.shade800,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(4),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 6),
+
+                        Text(
+                          _monthLabels[index],
+                          style: const TextStyle(fontSize: 10),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
