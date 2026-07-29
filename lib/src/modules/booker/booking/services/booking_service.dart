@@ -91,28 +91,31 @@ class BookingService {
   }
 
   Future<void> updateBookingStatus(String bookingId, String status) async {
-    final bookingDoc = await _firestore
-        .collection('bookings')
-        .doc(bookingId)
-        .get();
+    final bookingRef = _firestore.collection('bookings').doc(bookingId);
 
-    if (!bookingDoc.exists) return;
+    await _firestore.runTransaction((transaction) async {
+      final bookingDoc = await transaction.get(bookingRef);
 
-    final data = bookingDoc.data()!;
+      if (!bookingDoc.exists) {
+        throw Exception('Booking $bookingId not found.');
+      }
 
-    await _firestore.collection('bookings').doc(bookingId).update({
-      'status': status,
+      final data = bookingDoc.data()!;
+
+      transaction.update(bookingRef, {'status': status});
+
+      if (status == "completed" && (data["rewardGiven"] ?? false) == false) {
+        final rewardRef = _firestore
+            .collection("rewards")
+            .doc(data["bookerId"]);
+
+        transaction.update(rewardRef, {
+          "points": FieldValue.increment((data["totalPrice"] as num).toInt()),
+        });
+
+        transaction.update(bookingRef, {"rewardGiven": true});
+      }
     });
-
-    if (status == "completed" && (data["rewardGiven"] ?? false) == false) {
-      await _firestore.collection("rewards").doc(data["bookerId"]).update({
-        "points": FieldValue.increment((data["totalPrice"] as num).toInt()),
-      });
-
-      await _firestore.collection("bookings").doc(bookingId).update({
-        "rewardGiven": true,
-      });
-    }
   }
 
   Future<void> markBookingAsReviewed(String bookingId) async {

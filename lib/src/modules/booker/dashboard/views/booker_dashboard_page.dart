@@ -80,8 +80,8 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
 
                 InkWell(
                   borderRadius: BorderRadius.circular(14),
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ChangeNotifierProvider.value(
@@ -90,6 +90,13 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
                         ),
                       ),
                     );
+
+                    // A booking may have been made from within Search ->
+                    // VenueDetails -> Booking; refresh the Home preview so
+                    // it doesn't keep showing stale/no-bookings data.
+                    if (mounted) {
+                      context.read<DashboardViewModel>().loadLatestBookings();
+                    }
                   },
                   child: IgnorePointer(
                     child: TextField(
@@ -156,14 +163,22 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
                               rating: venue.rating,
                               pricePerHour: venue.pricePerHour,
                               imageUrl: venue.imageUrl,
-                              onTap: () {
-                                Navigator.push(
+                              onTap: () async {
+                                await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) =>
                                         VenueDetailsPage(venue: venue),
                                   ),
                                 );
+
+                                // Refresh the Home preview in case a booking
+                                // was created/cancelled on the pages above.
+                                if (mounted) {
+                                  context
+                                      .read<DashboardViewModel>()
+                                      .loadLatestBookings();
+                                }
                               },
                             );
                           },
@@ -178,13 +193,21 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
                     Text('My Bookings', style: AppTextStyles.heading3),
 
                     TextButton(
-                      onPressed: () {
-                        Navigator.push(
+                      onPressed: () async {
+                        await Navigator.push(
                           context,
                           MaterialPageRoute(
                             builder: (_) => const MyBookingsPage(),
                           ),
                         );
+
+                        // Bookings may have been cancelled on the full list
+                        // page; refresh the Home preview to match reality.
+                        if (mounted) {
+                          context
+                              .read<DashboardViewModel>()
+                              .loadLatestBookings();
+                        }
                       },
                       child: const Text("See All"),
                     ),
@@ -334,6 +357,12 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
           setState(() {
             currentIndex = index;
           });
+
+          // Returning to Home may follow a booking made from the Book or
+          // Favourite tabs; refresh the preview so it isn't stale.
+          if (index == 0) {
+            context.read<DashboardViewModel>().loadLatestBookings();
+          }
         },
         items: [
           NavItem(
