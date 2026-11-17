@@ -10,10 +10,8 @@ class DashboardViewModel extends ChangeNotifier {
   int get totalUsers => _totalUsers;
   int _pendingVenues = 0;
   int _pendingPromotions = 0;
-
   int get pendingVenues => _pendingVenues;
   int get pendingPromotions => _pendingPromotions;
-
   int get totalVendors => _totalVendors;
   int get totalVenues => _totalVenues;
 
@@ -21,15 +19,11 @@ class DashboardViewModel extends ChangeNotifier {
     try {
       _totalUsers = await _dashboardService.getTotalUsers();
       debugPrint("Users: $_totalUsers");
-
       _totalVendors = await _dashboardService.getTotalVendors();
       debugPrint("Vendors: $_totalVendors");
-
       _totalVenues = await _dashboardService.getTotalVenues();
       debugPrint("Venues: $_totalVenues");
-
       _pendingVenues = await _dashboardService.getPendingVenues();
-
       _pendingPromotions = await _dashboardService.getPendingPromotions();
 
       notifyListeners();

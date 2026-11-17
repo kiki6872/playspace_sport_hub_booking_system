@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/favourite/viewModels/fav_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/core/constants/app_colors.dart';
 import 'package:playspace_sport_hub_booking_system/src/core/theme/app_text_styles.dart';
@@ -44,58 +43,56 @@ class VenueCard extends StatelessWidget {
           children: [
             /// Venue Image
             Stack(
-  children: [
-    ClipRRect(
-      borderRadius: const BorderRadius.vertical(
-        top: Radius.circular(18),
-      ),
-      child: imageUrl.isEmpty
-          ? Container(
-              height: 150,
-              width: double.infinity,
-              color: Colors.grey.shade800,
-              child: const Icon(
-                Icons.image,
-                color: Colors.white54,
-                size: 45,
-              ),
-            )
-          : Image.network(
-              imageUrl,
-              height: 150,
-              width: double.infinity,
-              fit: BoxFit.cover,
-            ),
-    ),
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(18),
+                  ),
+                  child: imageUrl.isEmpty
+                      ? Container(
+                          height: 150,
+                          width: double.infinity,
+                          color: Colors.grey.shade800,
+                          child: const Icon(
+                            Icons.image,
+                            color: Colors.white54,
+                            size: 45,
+                          ),
+                        )
+                      : Image.network(
+                          imageUrl,
+                          height: 150,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                        ),
+                ),
 
-    Positioned(
-      top: 10,
-      right: 10,
-      child: Consumer<FavouriteViewModel>(
-        builder: (context, favVM, child) {
-          final isFav = favVM.isFavourite(venueId);
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: Consumer<FavouriteViewModel>(
+                    builder: (context, favVM, child) {
+                      final isFav = favVM.isFavourite(venueId);
 
-          return GestureDetector(
-            onTap: () async {
-              await favVM.toggleFavourite(venueId);
-            },
-            child: CircleAvatar(
-              radius: 18,
-              backgroundColor: Colors.white,
-              child: Icon(
-                isFav
-                    ? Icons.favorite
-                    : Icons.favorite_border,
-                color: Colors.red,
-                size: 22,
-              ),
+                      return GestureDetector(
+                        onTap: () async {
+                          await favVM.toggleFavourite(venueId);
+                        },
+                        child: CircleAvatar(
+                          radius: 18,
+                          backgroundColor: Colors.white,
+                          child: Icon(
+                            isFav ? Icons.favorite : Icons.favorite_border,
+                            color: Colors.red,
+                            size: 22,
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
-          );
-        },
-      ),
-    ),
-  ],
-),
             Padding(
               padding: const EdgeInsets.all(14),
               child: Column(

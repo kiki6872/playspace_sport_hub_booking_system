@@ -2,17 +2,11 @@ import 'package:flutter/material.dart';
 
 class MatchSummaryCard extends StatelessWidget {
   final String sportType;
-
   final String venueName;
-
   final DateTime? matchDate;
-
   final double totalPrice;
-
   final int currentPlayers;
-
   final int maximumPlayers;
-
   final String paymentMethod;
 
   const MatchSummaryCard({

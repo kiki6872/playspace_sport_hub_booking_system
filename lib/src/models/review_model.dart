@@ -1,20 +1,13 @@
 class ReviewModel {
   final String id;
-
   final String venueId;
   final String venueName;
-
   final String vendorId;
-
   final String bookerId;
   final String bookerName;
-
   final double rating;
-
   final String comment;
-
   final DateTime createdAt;
-
   final String reply;
 
   ReviewModel({

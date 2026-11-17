@@ -84,10 +84,10 @@ class _BookingPageState extends State<BookingPage> {
   Widget build(BuildContext context) {
     final bookingViewModel = context.read<BookingViewModel>();
 
-    // Promotion discount is deducted first, then any booker-selected
-    // voucher stacks on top of that.
+    // Promotion discount is deducted first, then any booker-selected voucher stacks on top of that
     double promotionDiscount = appliedPromotion != null
-        ? widget.venue.pricePerHour * (appliedPromotion!.discountPercentage / 100)
+        ? widget.venue.pricePerHour *
+              (appliedPromotion!.discountPercentage / 100)
         : 0;
 
     double voucherDiscount = bookingType == BookingType.own
@@ -185,7 +185,6 @@ class _BookingPageState extends State<BookingPage> {
 
               const SizedBox(height: 20),
 
-              // ====================== VOUCHER ======================
               if (bookingType == BookingType.own) ...[
                 const Text(
                   "Available Vouchers",
@@ -217,7 +216,6 @@ class _BookingPageState extends State<BookingPage> {
                 const SizedBox(height: 20),
               ],
 
-              // ====================== MATCH SETTINGS ======================
               if (bookingType == BookingType.match) ...[
                 const Text(
                   "Maximum Players",

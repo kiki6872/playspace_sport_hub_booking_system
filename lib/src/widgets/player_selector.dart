@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 class PlayerSelector extends StatelessWidget {
   final int minimumPlayers;
   final int maximumPlayers;
-
   final ValueChanged<int> onMinimumChanged;
   final ValueChanged<int> onMaximumChanged;
 

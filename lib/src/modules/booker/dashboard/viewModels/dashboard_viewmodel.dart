@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/venue_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/venue/services/venue_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -11,25 +10,23 @@ class DashboardViewModel extends ChangeNotifier {
   final VenueService _venueService = VenueService();
   final BookingService _bookingService = BookingService();
   String _selectedSport = "All";
-
   String get selectedSport => _selectedSport;
 
   bool _isLoading = false;
-
   bool get isLoading => _isLoading;
+
   String _userName = "";
-
   String get userName => _userName;
-  String _profileImage = "";
 
+  String _profileImage = "";
   String get profileImage => _profileImage;
 
   List<VenueModel> _venues = [];
-
   List<VenueModel> get venues => _venues;
-  List<BookingModel> _latestBookings = [];
 
+  List<BookingModel> _latestBookings = [];
   List<BookingModel> get latestBookings => _latestBookings;
+
   void filterSport(String sport) {
     _selectedSport = sport;
     notifyListeners();
@@ -51,7 +48,6 @@ class DashboardViewModel extends ChangeNotifier {
       notifyListeners();
 
       _venues = await _venueService.getVenues();
-
       debugPrint('Total venues: ${_venues.length}');
 
       for (final venue in _venues) {
@@ -77,7 +73,6 @@ class DashboardViewModel extends ChangeNotifier {
 
     if (doc.exists) {
       debugPrint(doc.data().toString());
-
       _userName = doc.data()?['fullName'] ?? "User";
       _profileImage = doc.data()?['profileImage'] ?? "";
       debugPrint("Booker Name: $_userName");

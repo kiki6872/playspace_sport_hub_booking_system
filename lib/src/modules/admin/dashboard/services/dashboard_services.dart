@@ -6,9 +6,7 @@ class DashboardService {
 
   Future<int> getTotalUsers() async {
     final snapshot = await _firestore.collection('users').get();
-
     debugPrint("Users Count: ${snapshot.docs.length}");
-
     return snapshot.docs.length;
   }
 
@@ -23,7 +21,6 @@ class DashboardService {
     for (final doc in snapshot.docs) {
       debugPrint(doc.data().toString());
     }
-
     return snapshot.docs.length;
   }
 

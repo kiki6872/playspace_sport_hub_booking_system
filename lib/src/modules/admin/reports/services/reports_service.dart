@@ -3,10 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class ReportsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// =========================
-  /// SUMMARY CARDS
-  /// =========================
-
   Future<int> getTotalActiveUsers() async {
     final snapshot = await _firestore
         .collection("users")
@@ -18,13 +14,11 @@ class ReportsService {
 
   Future<int> getTotalVenues() async {
     final snapshot = await _firestore.collection("venues").get();
-
     return snapshot.docs.length;
   }
 
   Future<int> getTotalBookings() async {
     final snapshot = await _firestore.collection("bookings").get();
-
     return snapshot.docs.length;
   }
 
@@ -43,10 +37,6 @@ class ReportsService {
 
     return revenue;
   }
-
-  /// =========================
-  /// BOOKING OVERVIEW
-  /// =========================
 
   Future<Map<String, int>> getBookingOverview() async {
     final snapshot = await _firestore.collection("bookings").get();
@@ -85,10 +75,6 @@ class ReportsService {
     };
   }
 
-  /// =========================
-  /// POPULAR SPORTS
-  /// =========================
-
   Future<Map<String, int>> getPopularSports() async {
     final snapshot = await _firestore.collection("bookings").get();
 
@@ -102,10 +88,6 @@ class ReportsService {
 
     return sports;
   }
-
-  /// =========================
-  /// PEAK USAGE
-  /// =========================
 
   Future<Map<String, int>> getPeakUsage() async {
     final snapshot = await _firestore.collection("bookings").get();
@@ -140,10 +122,6 @@ class ReportsService {
       "Night": night,
     };
   }
-
-  /// =========================
-  /// Helper
-  /// =========================
 
   int _extractHour(String time) {
     try {

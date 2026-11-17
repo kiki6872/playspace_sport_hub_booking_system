@@ -22,7 +22,6 @@ class PromotionModel {
     required this.isActive,
     required this.status,
     required this.applyTo,
-
     required this.venueIds,
   });
 

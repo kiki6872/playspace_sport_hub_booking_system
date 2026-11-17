@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/bank_account_model.dart';
 
 class BankAccountService {

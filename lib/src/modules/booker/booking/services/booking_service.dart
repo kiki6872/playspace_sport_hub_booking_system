@@ -13,7 +13,6 @@ class BookingService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<void> createBooking(BookingModel booking) async {
-    // Find schedule
     final scheduleQuery = await _firestore
         .collection("booking_schedule")
         .where("venueId", isEqualTo: booking.venueId)
@@ -37,7 +36,7 @@ class BookingService {
     final scheduleRef = scheduleQuery.docs.first.reference;
     final bookingRef = _firestore.collection('bookings').doc(booking.id);
 
-    // Save booking and mark the slot occupied atomically
+    // Save booking and mark the slot occupied
     await _firestore.runTransaction((transaction) async {
       final scheduleSnapshot = await transaction.get(scheduleRef);
 
@@ -68,9 +67,7 @@ class BookingService {
       });
     });
 
-    // Bookings are auto-approved with no vendor review step, so the vendor
-    // is paid as soon as the booking is made rather than waiting for
-    // autoCompleteBookings() to run once the booking date passes.
+    // Bookings are auto-approved with no vendor review step, so the vendor is paid as soon as the booking is made rather than waiting for autoCompleteBookings() to run once the booking date passes
     await RevenueService().addRevenue(
       vendorId: booking.vendorId,
       amount: booking.totalPrice,
@@ -79,9 +76,7 @@ class BookingService {
     await bookingRef.update({"revenueAdded": true});
   }
 
-  /// Finds the best matching active, admin-approved promotion for this
-  /// venue/vendor on the given booking date (highest discount wins if more
-  /// than one applies). Returns null if none apply.
+  /// Finds the best matching active, admin-approved promotion for this venue/vendor on the given booking date (highest discount wins if more than one applies, returns null if none apply.
   Future<PromotionModel?> getApplicablePromotion({
     required String vendorId,
     required String venueId,
@@ -110,8 +105,7 @@ class BookingService {
             promotion.endDate.day,
           );
 
-          final inRange =
-              !day.isBefore(start) && !day.isAfter(end);
+          final inRange = !day.isBefore(start) && !day.isAfter(end);
           final appliesToVenue =
               promotion.applyTo == "all" ||
               promotion.venueIds.contains(venueId);
@@ -186,7 +180,6 @@ class BookingService {
   }
 
   Future<void> cancelBooking(BookingModel booking) async {
-    // 1. Cari schedule
     final scheduleQuery = await _firestore
         .collection("booking_schedule")
         .where("venueId", isEqualTo: booking.venueId)
@@ -213,7 +206,6 @@ class BookingService {
     var reverseAmount = 0.0;
     var reverseVendorId = '';
 
-    // 2. Update booking status and free the slot atomically
     await _firestore.runTransaction((transaction) async {
       final bookingSnapshot = await transaction.get(bookingRef);
 
@@ -234,7 +226,6 @@ class BookingService {
 
       final schedule = BookingScheduleModel.fromMap(scheduleSnapshot.data()!);
 
-      // 3. Cari slot
       final index = schedule.slots.indexWhere(
         (slot) =>
             slot.startTime == booking.startTime &&
@@ -247,7 +238,6 @@ class BookingService {
         );
       }
 
-      // 4. Tukar occupied -> available
       schedule.slots[index] = SlotModel(
         id: schedule.slots[index].id,
         startTime: schedule.slots[index].startTime,
@@ -326,7 +316,7 @@ class BookingService {
     }
   }
 
-  /// Get Upcoming Approved Bookings
+  /// Get bookings
   Future<List<BookingModel>> getUpcomingBookings() async {
     final uid = _auth.currentUser!.uid;
 

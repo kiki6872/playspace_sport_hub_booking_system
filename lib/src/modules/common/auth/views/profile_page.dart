@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../viewModels/profile_viewmodel.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -9,7 +8,6 @@ import 'package:playspace_sport_hub_booking_system/src/modules/vendor/venue/serv
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
-
   @override
   State<ProfilePage> createState() => _ProfilePageState();
 }
@@ -19,7 +17,6 @@ class _ProfilePageState extends State<ProfilePage> {
   final phone = TextEditingController();
   final email = TextEditingController();
   final ImagePicker _picker = ImagePicker();
-
   final ImageUploadService _imageService = ImageUploadService();
 
   @override
@@ -28,9 +25,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     Future.microtask(() async {
       final vm = context.read<ProfileViewModel>();
-
       await vm.loadProfile();
-
       fullName.text = vm.profile["fullName"] ?? "";
       email.text = vm.profile["email"] ?? "";
       phone.text = vm.profile["phone"] ?? "";
@@ -57,17 +52,14 @@ class _ProfilePageState extends State<ProfilePage> {
                       );
 
                       if (picked == null) return;
-
                       final url = await _imageService.uploadImage(
                         File(picked.path),
                       );
 
                       if (url == null) return;
-
                       await vm.updateProfileImage(url);
 
                       if (!mounted) return;
-
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text("Profile image updated.")),
                       );

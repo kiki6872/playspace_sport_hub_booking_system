@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:uuid/uuid.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/booking_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/booking_schedule_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/slot_model.dart';
@@ -10,10 +9,6 @@ class BookingScheduleService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
-  ///====================================================
-  /// BOOKING
-  ///====================================================
 
   Future<List<BookingModel>> getVendorBookings() async {
     final uid = _auth.currentUser!.uid;
@@ -34,10 +29,6 @@ class BookingScheduleService {
       "status": status,
     });
   }
-
-  ///====================================================
-  /// CREATE DAILY SCHEDULE
-  ///====================================================
 
   Future<void> createDailySchedule({
     required String vendorId,
@@ -85,10 +76,6 @@ class BookingScheduleService {
     }
   }
 
-  ///====================================================
-  /// LOAD SCHEDULE
-  ///====================================================
-
   Future<BookingScheduleModel?> loadSchedule({
     required String venueId,
     required DateTime date,
@@ -122,22 +109,12 @@ class BookingScheduleService {
     }
   }
 
-  ///====================================================
-  /// UPDATE SLOT STATUS
-  ///====================================================
-
   Future<void> updateSlotStatus({
     required BookingScheduleModel schedule,
     required String slotId,
     required String status,
   }) async {
     final docRef = _firestore.collection("booking_schedule").doc(schedule.id);
-
-    // Read-modify-write inside a transaction so this doesn't race with
-    // concurrent writers of the same document's `slots` array (e.g. a
-    // booker creating/cancelling a booking via BookingService, which also
-    // rewrites the whole `slots` array). Without this, whichever write
-    // lands last silently clobbers the other's change.
     await _firestore.runTransaction((transaction) async {
       final snapshot = await transaction.get(docRef);
 
@@ -147,14 +124,10 @@ class BookingScheduleService {
 
       final freshSchedule = BookingScheduleModel.fromMap(snapshot.data()!);
 
-      final index = freshSchedule.slots.indexWhere(
-        (slot) => slot.id == slotId,
-      );
+      final index = freshSchedule.slots.indexWhere((slot) => slot.id == slotId);
 
       if (index == -1) {
-        throw Exception(
-          "Slot $slotId not found in schedule ${schedule.id}",
-        );
+        throw Exception("Slot $slotId not found in schedule ${schedule.id}");
       }
 
       freshSchedule.slots[index] = SlotModel(
@@ -170,10 +143,6 @@ class BookingScheduleService {
     });
   }
 
-  ///====================================================
-  /// BLOCK SLOT
-  ///====================================================
-
   Future<void> blockSlot({
     required BookingScheduleModel schedule,
     required String slotId,
@@ -184,10 +153,6 @@ class BookingScheduleService {
       status: "blocked",
     );
   }
-
-  ///====================================================
-  /// UNBLOCK SLOT
-  ///====================================================
 
   Future<void> unblockSlot({
     required BookingScheduleModel schedule,
@@ -211,10 +176,6 @@ class BookingScheduleService {
     );
   }
 
-  ///====================================================
-  /// BOOK SLOT
-  ///====================================================
-
   Future<void> bookSlot({
     required BookingScheduleModel schedule,
     required String slotId,
@@ -226,10 +187,6 @@ class BookingScheduleService {
     );
   }
 
-  ///====================================================
-  /// RELEASE SLOT
-  ///====================================================
-
   Future<void> releaseSlot({
     required BookingScheduleModel schedule,
     required String slotId,
@@ -240,10 +197,6 @@ class BookingScheduleService {
       status: "available",
     );
   }
-
-  ///====================================================
-  /// DEFAULT SLOT
-  ///====================================================
 
   List<SlotModel> generateDefaultSlots() {
     return [

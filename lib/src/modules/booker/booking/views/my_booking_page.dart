@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/booking/viewModels/booking_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/booking_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/widgets/confirmation_dialog.dart';
@@ -257,7 +256,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
             if (canCancel) ...[
               const Divider(),
-
               const SizedBox(height: 12),
 
               SizedBox(
@@ -272,7 +270,6 @@ class _MyBookingsPageState extends State<MyBookingsPage> {
 
             if (booking.status == "completed" && !booking.isReviewed) ...[
               const Divider(),
-
               const SizedBox(height: 12),
 
               SizedBox(

@@ -1,17 +1,13 @@
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/routes/app_routes.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/views/splash_page.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/views/login_page.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/views/register_page.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/views/forgot_password_page.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/viewModels/forgot_password_viewmodel.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/dashboard/views/booker_dashboard_page.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/admin/dashboard/views/admin_dashboard_page.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/viewModels/login_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/viewModels/register_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/dashboard/views/vendor_dashboard_page.dart';

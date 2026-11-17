@@ -94,10 +94,6 @@ class RegisterViewModel extends ChangeNotifier {
       try {
         await _userService.createUser(user);
       } catch (e) {
-        // The Firebase Auth account was created but the Firestore profile
-        // write failed. Roll back the auth account so we don't leave an
-        // orphaned account (one that can never log in with a profile, and
-        // can never be re-registered because the email is already in use).
         try {
           await credential.user!.delete();
         } catch (_) {

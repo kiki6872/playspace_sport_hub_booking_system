@@ -2,22 +2,15 @@ class BookingModel {
   final String id;
   final String venueId;
   final String venueName;
-
   final String vendorId;
-
   final String bookerId;
   final String bookerName;
-
   final String sportType;
   final String bookingType;
-
   final DateTime bookingDate;
-
   final String startTime;
   final String endTime;
-
   final double totalPrice;
-
   final String status;
   final bool isReviewed;
   final bool rewardGiven;

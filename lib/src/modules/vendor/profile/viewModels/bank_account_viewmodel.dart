@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/bank_account_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/profile/services/bank_account_service.dart';
 

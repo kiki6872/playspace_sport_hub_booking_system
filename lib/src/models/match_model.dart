@@ -19,10 +19,8 @@ class MatchModel {
     required this.bookingId,
     required this.hostId,
     required this.hostName,
-
     required this.currentPricePerPerson,
     required this.paymentMethod,
-
     required this.maximumPlayers,
     required this.currentPlayers,
     required this.participants,
@@ -35,23 +33,15 @@ class MatchModel {
     return {
       "matchId": matchId,
       "bookingId": bookingId,
-
       "hostId": hostId,
       "hostName": hostName,
-
       "currentPricePerPerson": currentPricePerPerson,
-
       "paymentMethod": paymentMethod,
-
       "maximumPlayers": maximumPlayers,
       "currentPlayers": currentPlayers,
-
       "participants": participants,
-
       "description": description,
-
       "status": status,
-
       "createdAt": createdAt,
     };
   }
@@ -60,24 +50,15 @@ class MatchModel {
     return MatchModel(
       matchId: map["matchId"] ?? "",
       bookingId: map["bookingId"] ?? "",
-
       hostId: map["hostId"] ?? "",
       hostName: map["hostName"] ?? "",
-
       currentPricePerPerson: (map["currentPricePerPerson"] ?? 0).toDouble(),
-
       paymentMethod: map["paymentMethod"] ?? "equally",
-
       maximumPlayers: map["maximumPlayers"] ?? 2,
-
       currentPlayers: map["currentPlayers"] ?? 1,
-
       participants: List<Map<String, dynamic>>.from(map["participants"] ?? []),
-
       description: map["description"] ?? "",
-
       status: map["status"] ?? "waiting",
-
       createdAt: map["createdAt"] ?? Timestamp.now(),
     );
   }

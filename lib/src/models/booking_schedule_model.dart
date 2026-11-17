@@ -2,15 +2,10 @@ import 'slot_model.dart';
 
 class BookingScheduleModel {
   final String id;
-
   final String vendorId;
-
   final String venueId;
-
   final String venueName;
-
   final DateTime scheduleDate;
-
   final List<SlotModel> slots;
 
   BookingScheduleModel({

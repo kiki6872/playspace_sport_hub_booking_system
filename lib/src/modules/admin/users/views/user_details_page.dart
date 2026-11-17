@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/admin/users/viewModels/user_details_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/user_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/widgets/confirmation_dialog.dart';

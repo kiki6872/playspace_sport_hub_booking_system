@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/venue_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/schedule/viewModels/booking_schedule_viewmodel.dart';
 
@@ -93,10 +92,6 @@ class _VendorSchedulePageState extends State<VendorSchedulePage> {
       ),
     );
   }
-
-  ///=========================================================
-  /// BOOKING TAB
-  ///=========================================================
 
   Widget _buildBookings(BookingScheduleViewModel vm) {
     if (vm.isLoading) {
@@ -233,7 +228,6 @@ class _VendorSchedulePageState extends State<VendorSchedulePage> {
                     Text("RM ${booking.totalPrice.toStringAsFixed(2)}"),
                   ],
                 ),
-
               ],
             ),
           ),
@@ -241,10 +235,6 @@ class _VendorSchedulePageState extends State<VendorSchedulePage> {
       },
     );
   }
-
-  ///=========================================================
-  /// AVAILABILITY TAB
-  ///=========================================================
 
   Widget _buildAvailability(BookingScheduleViewModel vm) {
     if (vm.selectedVenue == null) {

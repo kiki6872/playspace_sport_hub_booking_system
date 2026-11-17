@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 
 class PriceInfoCard extends StatelessWidget {
   final double totalPrice;
-
   final double currentPricePerPerson;
-
   final String paymentMethod;
-
   final int currentPlayers;
 
   const PriceInfoCard({

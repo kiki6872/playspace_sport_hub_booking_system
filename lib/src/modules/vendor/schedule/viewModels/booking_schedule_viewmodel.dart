@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/booking_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/booking_schedule_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/slot_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/venue_model.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/schedule/services/booking_schedule_service.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/venue/services/venue_service.dart';
 
@@ -15,26 +13,14 @@ class BookingScheduleViewModel extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  ///===========================
-  /// BOOKING
-  ///===========================
-
   List<BookingModel> _bookings = [];
   List<BookingModel> get bookings => _bookings;
-
-  ///===========================
-  /// VENUE
-  ///===========================
 
   List<VenueModel> _venues = [];
   List<VenueModel> get venues => _venues;
 
   VenueModel? _selectedVenue;
   VenueModel? get selectedVenue => _selectedVenue;
-
-  ///===========================
-  /// SCHEDULE
-  ///===========================
 
   BookingScheduleModel? _schedule;
   BookingScheduleModel? get schedule => _schedule;
@@ -44,10 +30,6 @@ class BookingScheduleViewModel extends ChangeNotifier {
 
   SlotModel? _selectedSlot;
   SlotModel? get selectedSlot => _selectedSlot;
-
-  ///===========================
-  /// LOAD BOOKINGS
-  ///===========================
 
   Future<void> loadBookings() async {
     try {
@@ -60,10 +42,6 @@ class BookingScheduleViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  ///===========================
-  /// LOAD VENUES
-  ///===========================
 
   Future<void> loadVendorVenues() async {
     _venues = await _venueService.getVendorVenues();
@@ -90,10 +68,6 @@ class BookingScheduleViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  ///===========================
-  /// LOAD SCHEDULE
-  ///===========================
-
   Future<void> loadSchedule() async {
     if (_selectedVenue == null) return;
 
@@ -118,10 +92,6 @@ class BookingScheduleViewModel extends ChangeNotifier {
     }
   }
 
-  ///===========================
-  /// BLOCK SLOT
-  ///===========================
-
   Future<void> blockSelectedSlot() async {
     if (_schedule == null || _selectedSlot == null) return;
 
@@ -129,10 +99,6 @@ class BookingScheduleViewModel extends ChangeNotifier {
 
     await loadSchedule();
   }
-
-  ///===========================
-  /// UNBLOCK SLOT
-  ///===========================
 
   Future<void> unblockSelectedSlot() async {
     if (_schedule == null || _selectedSlot == null) return;
@@ -142,19 +108,11 @@ class BookingScheduleViewModel extends ChangeNotifier {
     await loadSchedule();
   }
 
-  ///===========================
-  /// APPROVE
-  ///===========================
-
   Future<void> approveBooking(String bookingId) async {
     await _service.updateStatus(bookingId, "approved");
 
     await loadBookings();
   }
-
-  ///===========================
-  /// REJECT
-  ///===========================
 
   Future<void> rejectBooking(String bookingId) async {
     await _service.updateStatus(bookingId, "rejected");

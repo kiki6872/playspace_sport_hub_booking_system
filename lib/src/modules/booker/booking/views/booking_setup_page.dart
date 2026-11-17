@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/venue_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/models/booking_schedule_model.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/dashboard/viewModels/dashboard_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/booking/views/booking_page.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/booker/review/viewModels/review_viewmodel.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/schedule/services/booking_schedule_service.dart';
 
 class BookingSetupPage extends StatefulWidget {

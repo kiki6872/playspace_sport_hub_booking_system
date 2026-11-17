@@ -1,12 +1,7 @@
 class SlotModel {
   final String id;
-
   final String startTime;
   final String endTime;
-
-  /// available
-  /// blocked
-  /// booked
   final String status;
 
   SlotModel({

@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/user_model.dart';
 
 class UsersService {

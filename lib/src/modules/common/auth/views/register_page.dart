@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/core/constants/app_colors.dart';
 import 'package:playspace_sport_hub_booking_system/src/core/theme/app_text_styles.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/viewModels/register_viewmodel.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/widgets/custom_button.dart';
 import 'package:playspace_sport_hub_booking_system/src/widgets/custom_textfield.dart';
 

@@ -1,13 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/promotion_model.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/promotion/viewModels/promotion_viewmodel.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/promotion/views/create_promotion_page.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/widgets/confirmation_dialog.dart';
 
 class PromotionPage extends StatefulWidget {

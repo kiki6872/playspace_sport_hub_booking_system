@@ -24,37 +24,31 @@ class PromotionViewModel extends ChangeNotifier {
 
   Future<void> reapplyPromotion(String id) async {
     await _service.reapplyPromotion(id);
-
     await loadPromotions();
   }
 
   Future<void> createPromotion(PromotionModel promotion) async {
     await _service.createPromotion(promotion);
-
     await loadPromotions();
   }
 
   Future<void> updatePromotion(PromotionModel promotion) async {
     await _service.updatePromotion(promotion);
-
     await loadPromotions();
   }
 
   Future<void> deletePromotion(String id) async {
     await _service.deletePromotion(id);
-
     await loadPromotions();
   }
 
   Future<void> togglePromotion(String id, bool active) async {
     await _service.togglePromotion(id, active);
-
     await loadPromotions();
   }
 
   Future<void> loadVendorVenues() async {
     vendorVenues = await _service.getVendorVenues();
-
     notifyListeners();
   }
 }

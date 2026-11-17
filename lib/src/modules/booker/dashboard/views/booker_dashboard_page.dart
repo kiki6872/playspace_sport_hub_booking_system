@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/core/constants/app_colors.dart';
 import 'package:playspace_sport_hub_booking_system/src/core/constants/app_icons.dart';
 import 'package:playspace_sport_hub_booking_system/src/core/theme/app_text_styles.dart';
@@ -64,7 +63,6 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
       backgroundColor: AppColors.background,
 
       body: [
-        /// ================= HOME =================
         SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -91,9 +89,6 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
                       ),
                     );
 
-                    // A booking may have been made from within Search ->
-                    // VenueDetails -> Booking; refresh the Home preview so
-                    // it doesn't keep showing stale/no-bookings data.
                     if (mounted) {
                       context.read<DashboardViewModel>().loadLatestBookings();
                     }
@@ -172,8 +167,6 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
                                   ),
                                 );
 
-                                // Refresh the Home preview in case a booking
-                                // was created/cancelled on the pages above.
                                 if (mounted) {
                                   context
                                       .read<DashboardViewModel>()
@@ -201,8 +194,6 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
                           ),
                         );
 
-                        // Bookings may have been cancelled on the full list
-                        // page; refresh the Home preview to match reality.
                         if (mounted) {
                           context
                               .read<DashboardViewModel>()
@@ -338,16 +329,12 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
           ),
         ),
 
-        /// ================= BOOK =================
         const BookingSetupPage(),
 
-        /// ================= MATCH =================
         const MatchPage(),
 
-        /// ================= REWARD =================
         const RewardPage(),
 
-        /// ================= CHAT =================
         const FavouritePage(),
       ][currentIndex],
 
@@ -358,8 +345,6 @@ class _BookerDashboardPageState extends State<BookerDashboardPage> {
             currentIndex = index;
           });
 
-          // Returning to Home may follow a booking made from the Book or
-          // Favourite tabs; refresh the preview so it isn't stale.
           if (index == 0) {
             context.read<DashboardViewModel>().loadLatestBookings();
           }

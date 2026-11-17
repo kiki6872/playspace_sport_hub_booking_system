@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/core/theme/app_text_styles.dart';
 
 class CustomButton extends StatelessWidget {

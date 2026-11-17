@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/admin/reports/services/reports_service.dart';
 
 class ReportsViewModel extends ChangeNotifier {
@@ -7,10 +6,6 @@ class ReportsViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
-
-  /// =========================
-  /// Summary Cards
-  /// =========================
 
   int _totalUsers = 0;
   int get totalUsers => _totalUsers;
@@ -24,10 +19,6 @@ class ReportsViewModel extends ChangeNotifier {
   double _totalRevenue = 0;
   double get totalRevenue => _totalRevenue;
 
-  /// =========================
-  /// Analytics
-  /// =========================
-
   Map<String, int> _bookingOverview = {};
   Map<String, int> get bookingOverview => _bookingOverview;
 
@@ -37,27 +28,17 @@ class ReportsViewModel extends ChangeNotifier {
   Map<String, int> _peakUsage = {};
   Map<String, int> get peakUsage => _peakUsage;
 
-  /// =========================
-  /// Load All Reports
-  /// =========================
-
   Future<void> loadReports() async {
     _isLoading = true;
     notifyListeners();
 
     try {
       _totalUsers = await _reportsService.getTotalActiveUsers();
-
       _totalVenues = await _reportsService.getTotalVenues();
-
       _totalBookings = await _reportsService.getTotalBookings();
-
       _totalRevenue = await _reportsService.getTotalRevenue();
-
       _bookingOverview = await _reportsService.getBookingOverview();
-
       _popularSports = await _reportsService.getPopularSports();
-
       _peakUsage = await _reportsService.getPeakUsage();
     } catch (e) {
       debugPrint("Reports Error: $e");

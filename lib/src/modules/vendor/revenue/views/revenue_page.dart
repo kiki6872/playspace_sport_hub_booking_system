@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/revenue/viewModels/revenue_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/widgets/confirmation_dialog.dart';
 
@@ -301,7 +300,9 @@ class _EarningsPageState extends State<EarningsPage> {
                         const SizedBox(height: 4),
 
                         Container(
-                          height: amount > 0 ? barHeight.clamp(3, chartHeight) : 2,
+                          height: amount > 0
+                              ? barHeight.clamp(3, chartHeight)
+                              : 2,
                           margin: const EdgeInsets.symmetric(horizontal: 3),
                           decoration: BoxDecoration(
                             color: amount > 0

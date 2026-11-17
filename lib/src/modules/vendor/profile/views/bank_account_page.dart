@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/bank_account_model.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/vendor/profile/viewModels/bank_account_viewmodel.dart';
 
@@ -51,7 +50,6 @@ class _BankAccountPageState extends State<BankAccountPage> {
               : account.bankName;
 
           holderController.text = account.accountHolderName;
-
           accountController.text = account.accountNumber;
           autoWithdraw = account.autoWithdraw;
         });

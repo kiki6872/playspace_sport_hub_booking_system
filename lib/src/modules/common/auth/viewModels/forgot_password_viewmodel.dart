@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-
 import 'package:firebase_auth/firebase_auth.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/services/auth_service.dart';
 
 class ForgotPasswordViewModel extends ChangeNotifier {

@@ -9,10 +9,6 @@ class MatchService {
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  /// ==========================
-  /// CREATE MATCH
-  /// ==========================
-
   Future<void> createMatch(MatchModel match) async {
     await _firestore
         .collection("matches")
@@ -20,16 +16,10 @@ class MatchService {
         .set(match.toMap());
   }
 
-  /// ==========================
-  /// GET AVAILABLE MATCHES
-  /// ==========================
-
   Future<List<MatchWithBookingModel>> getOpenMatches() async {
     final uid = _auth.currentUser!.uid;
 
-    // Sorted client-side rather than via .orderBy() so this doesn't need a
-    // composite index (whereIn + orderBy on a different field) that isn't
-    // guaranteed to exist in this project.
+    // Sorted client-side rather than via .orderBy() so doesn't need a composite index (whereIn + orderBy on a different field)
     final snapshot = await _firestore
         .collection("matches")
         .where("status", whereIn: ["waiting", "ready"])
@@ -40,16 +30,10 @@ class MatchService {
         .where((match) => match.hostId != uid)
         .toList();
 
-    matches.sort(
-      (a, b) => b.createdAt.compareTo(a.createdAt),
-    );
+    matches.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return _attachBookings(matches);
   }
-
-  /// ==========================
-  /// MY MATCHES
-  /// ==========================
 
   Future<List<MatchWithBookingModel>> getMyMatches() async {
     final uid = _auth.currentUser!.uid;
@@ -67,10 +51,7 @@ class MatchService {
     return _attachBookings(matches);
   }
 
-  /// Fetches each match's booking in parallel (rather than one Firestore
-  /// round-trip at a time) and silently drops any match whose bookingId no
-  /// longer resolves to a real booking doc, instead of letting one bad
-  /// match take down the whole list load.
+  /// Fetches each match's booking in parallel (rather than one Firestore round-trip at a time) and silently drops any match whose bookingId no longer resolves to a real booking
   Future<List<MatchWithBookingModel>> _attachBookings(
     List<MatchModel> matches,
   ) async {
@@ -87,10 +68,6 @@ class MatchService {
     return results.whereType<MatchWithBookingModel>().toList();
   }
 
-  /// ==========================
-  /// JOIN MATCH
-  /// ==========================
-
   Future<void> joinMatch(MatchModel match) async {
     final uid = _auth.currentUser!.uid;
 
@@ -99,14 +76,10 @@ class MatchService {
     }
 
     final userDoc = await _firestore.collection("users").doc(uid).get();
-
     final participants = List<Map<String, dynamic>>.from(match.participants);
-
     participants.add({"userId": uid, "userName": userDoc["fullName"]});
-
     final currentPlayers = participants.length;
     final booking = await _getBooking(match.bookingId);
-
     final double currentPrice = match.paymentMethod == "host"
         ? 0
         : booking.totalPrice / currentPlayers;
@@ -127,21 +100,12 @@ class MatchService {
     });
   }
 
-  /// ==========================
-  /// LEAVE MATCH
-  /// ==========================
-
   Future<void> leaveMatch(MatchModel match) async {
     final uid = _auth.currentUser!.uid;
-
     final participants = List<Map<String, dynamic>>.from(match.participants);
-
     participants.removeWhere((e) => e["userId"] == uid);
-
     final currentPlayers = participants.length;
-
     final booking = await _getBooking(match.bookingId);
-
     final double currentPrice = currentPlayers == 0
         ? booking.totalPrice
         : match.paymentMethod == "host"
@@ -149,7 +113,6 @@ class MatchService {
         : booking.totalPrice / currentPlayers;
 
     String status = "waiting";
-
     if (currentPlayers >= match.maximumPlayers) {
       status = "full";
     } else if (currentPlayers >= 2) {
@@ -163,17 +126,9 @@ class MatchService {
     });
   }
 
-  /// ==========================
-  /// DELETE MATCH
-  /// ==========================
-
   Future<void> deleteMatch(String id) async {
     await _firestore.collection("matches").doc(id).delete();
   }
-
-  /// ==========================
-  /// CLOSE MATCH
-  /// ==========================
 
   Future<void> closeMatch(String id) async {
     await _firestore.collection("matches").doc(id).update({

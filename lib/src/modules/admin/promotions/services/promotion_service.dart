@@ -1,11 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/models/promotion_model.dart';
 
 class AdminPromotionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  /// Pending Promotions
   Future<List<PromotionModel>> getPendingPromotions() async {
     final snapshot = await _firestore
         .collection("promotions")
@@ -17,7 +15,6 @@ class AdminPromotionService {
         .toList();
   }
 
-  /// Ongoing Promotions
   Future<List<PromotionModel>> getActivePromotions() async {
     final snapshot = await _firestore
         .collection("promotions")
@@ -25,7 +22,6 @@ class AdminPromotionService {
         .get();
 
     final now = DateTime.now();
-
     final today = DateTime(now.year, now.month, now.day);
 
     return snapshot.docs.map((doc) => PromotionModel.fromMap(doc.data())).where(
@@ -41,15 +37,12 @@ class AdminPromotionService {
     ).toList();
   }
 
-  /// Completed Promotions
   Future<List<PromotionModel>> getCompletedPromotions() async {
     final snapshot = await _firestore
         .collection("promotions")
         .where("status", isEqualTo: "approved")
         .get();
-
     final now = DateTime.now();
-
     final today = DateTime(now.year, now.month, now.day);
 
     return snapshot.docs.map((doc) => PromotionModel.fromMap(doc.data())).where(
@@ -65,7 +58,6 @@ class AdminPromotionService {
     ).toList();
   }
 
-  /// Approve
   Future<void> approvePromotion(String promotionId) async {
     await _firestore.collection("promotions").doc(promotionId).update({
       "status": "approved",
@@ -73,7 +65,6 @@ class AdminPromotionService {
     });
   }
 
-  /// Reject
   Future<void> rejectPromotion(String promotionId) async {
     await _firestore.collection("promotions").doc(promotionId).update({
       "status": "rejected",

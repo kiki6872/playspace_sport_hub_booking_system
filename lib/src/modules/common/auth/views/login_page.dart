@@ -5,9 +5,7 @@ import 'package:playspace_sport_hub_booking_system/src/core/constants/app_colors
 import 'package:playspace_sport_hub_booking_system/src/core/theme/app_text_styles.dart';
 import 'package:playspace_sport_hub_booking_system/src/widgets/custom_button.dart';
 import 'package:playspace_sport_hub_booking_system/src/widgets/custom_textfield.dart';
-
 import 'package:provider/provider.dart';
-
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/viewModels/login_viewmodel.dart';
 import 'package:playspace_sport_hub_booking_system/src/modules/common/auth/viewModels/profile_viewmodel.dart';
 
@@ -87,10 +85,6 @@ class LoginPage extends StatelessWidget {
 
                   if (!context.mounted) return;
 
-                  // ProfileViewModel is created once at app startup and
-                  // otherwise never reloaded, so without this it keeps
-                  // showing whichever user was first authenticated this
-                  // session after switching accounts.
                   if (result == 'booker' ||
                       result == 'vendor' ||
                       result == 'admin') {
